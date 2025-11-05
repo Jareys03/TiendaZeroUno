@@ -14,17 +14,14 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
+// Evita que se ejecute data.sql en este slice
+@DataJpaTest(properties = "spring.sql.init.mode=never")
 class RelacionItemProductoTest {
 
-    @Autowired
-    ProductoRepository productoRepo;
-    @Autowired
-    UsuarioRepository usuarioRepo;
-    @Autowired
-    CarritoRepository carritoRepo;
-    @Autowired
-    ItemCarritoRepository itemRepo;
+    @Autowired ProductoRepository productoRepo;
+    @Autowired UsuarioRepository usuarioRepo;
+    @Autowired CarritoRepository carritoRepo;
+    @Autowired ItemCarritoRepository itemRepo;
 
     @Test
     void itemReferenciaProducto() {

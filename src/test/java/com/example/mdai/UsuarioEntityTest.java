@@ -8,7 +8,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
+@DataJpaTest(properties = "spring.sql.init.mode=never") // <- NO cargar data.sql en este test
 class UsuarioEntityTest {
 
     @Autowired

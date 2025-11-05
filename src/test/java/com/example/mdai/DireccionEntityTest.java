@@ -1,10 +1,13 @@
 package com.example.mdai;
 
 import com.example.mdai.model.Direccion;
+import com.example.mdai.model.Usuario;
 import com.example.mdai.repository.DireccionRepository;
+import com.example.mdai.repository.UsuarioRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,33 +17,48 @@ class DireccionEntityTest {
     @Autowired
     private DireccionRepository repo;
 
-    @Test
-    void crearYLeerDireccion() {
-        Direccion d = new Direccion("Calle Mayor 10", "Cáceres");
-        d = repo.save(d);
+    @Autowired
+    private UsuarioRepository usuarioRepo;
 
-        assertThat(d.getId()).isNotNull();
+    @Autowired
+    private JdbcTemplate jdbc;
 
-        Direccion cargada = repo.findById(d.getId()).orElseThrow();
-        assertThat(cargada.getCalle()).isEqualTo("Calle Mayor 10");
-        assertThat(cargada.getCiudad()).isEqualTo("Cáceres");
+    /** Ajusta el identity de DIRECCIONES a (MAX(ID)+1) para evitar colisiones con los IDs fijos del data.sql */
+    private void bumpDireccionesIdentity() {
+        Long next = jdbc.queryForObject("SELECT COALESCE(MAX(ID),0)+1 FROM DIRECCIONES", Long.class);
+        jdbc.execute("ALTER TABLE DIRECCIONES ALTER COLUMN ID RESTART WITH " + next);
     }
 
     @Test
-    void actualizarDireccion() {
-        Direccion d = repo.save(new Direccion("Avenida Sol", "Mérida"));
-        d.setCiudad("Badajoz");
-        repo.save(d);
+    void crearYLeerDireccion() {
+        bumpDireccionesIdentity(); // evita PK violation
+
+        // Usa un usuario existente del data.sql
+        Usuario u = usuarioRepo.findById(1L)
+                .orElseGet(() -> usuarioRepo.findFirstBycorreo("javier@example.com").orElseThrow());
+
+        Direccion d = new Direccion("C/ Sol 123", "Badajoz");
+        d.setUsuario(u); // NOT NULL: obligatorio
+        d = repo.save(d);
 
         Direccion loaded = repo.findById(d.getId()).orElseThrow();
         assertThat(loaded.getCiudad()).isEqualTo("Badajoz");
+        assertThat(loaded.getUsuario()).isNotNull();
+        assertThat(loaded.getUsuario().getId()).isEqualTo(u.getId());
     }
 
     @Test
     void eliminarDireccion() {
-        Direccion d = repo.save(new Direccion("C/ Luna", "Trujillo"));
-        Long id = d.getId();
+        bumpDireccionesIdentity(); // evita PK violation al crear la dirección efímera
 
+        Usuario u = usuarioRepo.findById(2L)
+                .orElseGet(() -> usuarioRepo.findFirstBycorreo("laura@example.com").orElseThrow());
+
+        Direccion d = new Direccion("C/ Río 5", "Mérida");
+        d.setUsuario(u);
+        d = repo.save(d);
+
+        Long id = d.getId();
         repo.deleteById(id);
 
         assertThat(repo.findById(id)).isEmpty();

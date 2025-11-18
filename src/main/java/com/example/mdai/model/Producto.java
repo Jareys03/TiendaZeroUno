@@ -14,7 +14,7 @@ public class Producto {
     @Column(nullable = false)
     private double precio;
 
-    protected Producto() {}
+    public Producto() {}
 
     public Producto(String nombre, double precio) {
         this.nombre = nombre;

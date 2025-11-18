@@ -23,7 +23,6 @@ class DireccionEntityTest {
     @Autowired
     private JdbcTemplate jdbc;
 
-    /** Ajusta el identity de DIRECCIONES a (MAX(ID)+1) para evitar colisiones con los IDs fijos del data.sql */
     private void bumpDireccionesIdentity() {
         Long next = jdbc.queryForObject("SELECT COALESCE(MAX(ID),0)+1 FROM DIRECCIONES", Long.class);
         jdbc.execute("ALTER TABLE DIRECCIONES ALTER COLUMN ID RESTART WITH " + next);

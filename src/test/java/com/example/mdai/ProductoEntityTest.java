@@ -18,7 +18,6 @@ class ProductoEntityTest {
     @Autowired
     JdbcTemplate jdbc;
 
-    /** Ajusta el identity de PRODUCTO a MAX(ID)+1 para evitar colisiones con los IDs del data.sql */
     private void bumpProductoIdentity() {
         Long next = jdbc.queryForObject("SELECT COALESCE(MAX(ID),0)+1 FROM PRODUCTO", Long.class);
         jdbc.execute("ALTER TABLE PRODUCTO ALTER COLUMN ID RESTART WITH " + next);

@@ -1,7 +1,7 @@
 # ZeroUno — Tienda de Informática
 
 <p align="center">
-  <img src="Logo.png" alt="Logo de ZeroUno" width="240">
+  <img src="readme/Logo.png" alt="Logo de ZeroUno" width="240">
 </p>
 
 ## Integrantes
@@ -15,11 +15,11 @@
 <table>
   <tr>
     <td align="center">
-      <img src="J.jpg" alt="Javier Rey Sánchez" width="140"><br>
+      <img src="readme/J.jpg" alt="Javier Rey Sánchez" width="140"><br>
       <sub><b>Javier Rey Sánchez</b></sub>
     </td>
     <td align="center">
-      <img src="L.jpg" alt="Laura Reinosa Sánchez" width="140"><br>
+      <img src="readme/L.jpg" alt="Laura Reinosa Sánchez" width="140"><br>
       <sub><b>Laura Reinosa Sánchez</b></sub>
     </td>
   </tr>
@@ -353,7 +353,7 @@ De esta forma se evitan errores en precios, cantidades o productos duplicados, y
 
 **DIAGRAMA ENTIDAD -- RELACIÓN**
 
-![](../readme/diagramaER.jpg)
+![](readme/diagramaER.jpg)
 
 ## Descripcion diagrama
 

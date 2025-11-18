@@ -37,17 +37,31 @@ public class Carrito {
     }
 
     public void eliminarProducto(Long productoId) {
+
         items.removeIf(i -> i.getProducto().getId().equals(productoId));
     }
 
     public double getTotal() {
+
         return items.stream().mapToDouble(ItemCarrito::getSubtotal).sum();
     }
 
     // getters/setters
-    public Long getId() { return id; }
-    public Usuario getUsuario() { return usuario; }
-    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
-    public List<ItemCarrito> getItems() { return items; }
+    public Long getId() {
+        return id;
+    }
+    public Usuario getUsuario() {
+        return usuario;
+    }
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
+    public List<ItemCarrito> getItems() {
+        return items;
+    }
+
+    public void setItems(List<ItemCarrito> items) {
+        this.items = items;
+    }
 }
 

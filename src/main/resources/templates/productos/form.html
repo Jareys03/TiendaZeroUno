@@ -1,0 +1,16 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Formulario Producto</title>
+</head>
+<body>
+<h2 th:text="${producto.id} != null ? 'Editar Producto' : 'Nuevo Producto'"></h2>
+<form th:action="${producto.id} != null ? @{'/productos/actualizar/' + ${producto.id}} : @{/productos}" th:object="${producto}" method="post">
+    <label>Nombre: <input type="text" th:field="*{nombre}" required/></label><br/>
+    <label>Precio: <input type="number" step="0.01" th:field="*{precio}" required/></label><br/>
+    <button type="submit">Guardar</button>
+</form>
+<p><a th:href="@{/productos}">Volver a la lista</a></p>
+</body>
+</html>

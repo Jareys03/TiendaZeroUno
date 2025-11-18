@@ -21,7 +21,7 @@ public class Usuario {
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Direccion> direcciones = new ArrayList<>();
 
-    protected Usuario() { }
+    public Usuario() { }
 
     public Usuario(String nombre, String correo) {
         this.nombre = nombre;

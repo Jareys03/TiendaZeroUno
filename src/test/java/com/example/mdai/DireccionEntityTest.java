@@ -5,11 +5,19 @@ import com.example.mdai.model.Usuario;
 import com.example.mdai.repository.DireccionRepository;
 import com.example.mdai.repository.UsuarioRepository;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.dao.DataIntegrityViolationException;
+import java.util.stream.StreamSupport;
+
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 class DireccionEntityTest {
@@ -68,5 +76,67 @@ class DireccionEntityTest {
         repo.deleteById(id);
 
         assertThat(repo.findById(id)).isEmpty();
+    }
+
+    @Test
+    void obtenerPorId_existente() {
+        bumpDireccionesIdentity();
+
+        Usuario u = usuarioRepo.findFirstBycorreo("javier@example.com")
+                .orElseThrow();
+
+        Direccion d = new Direccion("C/ Olivo 7", "Cáceres");
+        d.setUsuario(u);
+        d = repo.save(d);
+
+        assertThat(repo.findById(d.getId())).isPresent();
+        assertThat(repo.findById(d.getId()).orElseThrow().getCalle()).isEqualTo("C/ Olivo 7");
+    }
+
+    @Test
+    void obtenerPorId_noExiste() {
+        // id improbable que no exista en pruebas
+        Long inexistente = 999999L;
+        assertThat(repo.findById(inexistente)).isEmpty();
+    }
+
+    @Test
+    void obtenerPorIdOrThrow_noExiste_deberiaLanzar() {
+        Long inexistente = 999999L;
+        assertThatThrownBy(() -> repo.findById(inexistente)
+                .orElseThrow(() -> new EntityNotFoundException("Direccion no encontrada: " + inexistente)))
+                .isInstanceOf(EntityNotFoundException.class);
+    }
+
+    @Test
+    void listarPorUsuario() {
+        bumpDireccionesIdentity();
+
+        Usuario u1 = usuarioRepo.findFirstBycorreo("javier@example.com")
+                .orElseThrow();
+        Usuario u2 = usuarioRepo.findFirstBycorreo("laura@example.com")
+                .orElseThrow();
+
+        Direccion a1 = new Direccion("C/ A 1", "CiudadA");
+        a1.setUsuario(u1);
+        Direccion a2 = new Direccion("C/ A 2", "CiudadA");
+        a2.setUsuario(u1);
+        Direccion b1 = new Direccion("C/ B 1", "CiudadB");
+        b1.setUsuario(u2);
+
+        repo.save(a1);
+        repo.save(a2);
+        repo.save(b1);
+
+        // Copiar el Iterable a una List para preservar el tipo Direccion
+        java.util.List<Direccion> all = new java.util.ArrayList<>();
+        repo.findAll().forEach(all::add);
+
+        java.util.List<Direccion> porUsuario1 = all.stream()
+                .filter(d -> d.getUsuario() != null && u1.getId().equals(d.getUsuario().getId()))
+                .collect(java.util.stream.Collectors.toList());
+
+        assertThat(porUsuario1).hasSizeGreaterThanOrEqualTo(2);
+        assertThat(porUsuario1).allMatch(d -> u1.getId().equals(d.getUsuario().getId()));
     }
 }

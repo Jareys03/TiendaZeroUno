@@ -1,45 +1,68 @@
 package com.example.mdai;
 
 import com.example.mdai.model.Usuario;
-import com.example.mdai.repository.UsuarioRepository;
+import com.example.mdai.services.UsuarioService;
+import com.example.mdai.services.UsuarioServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest(properties = "spring.sql.init.mode=never") // <- NO cargar data.sql en este test
+@DataJpaTest(properties = "spring.sql.init.mode=never")
+@Import(UsuarioServiceImpl.class)
 class UsuarioEntityTest {
 
     @Autowired
-    UsuarioRepository repo;
+    UsuarioService usuarioService;   // usamos la interfaz del servicio
 
     @Test
-    void crearYLeerUsuario() {
+    void crearYLeerUsuario_conService() {
         Usuario u = new Usuario("Laura", "laura@zerouno.com");
-        u = repo.save(u);
+        u = usuarioService.save(u);
 
         assertThat(u.getId()).isNotNull();
-        assertThat(repo.findById(u.getId())).isPresent();
-        assertThat(repo.findById(u.getId()).get().getCorreo()).isEqualTo("laura@zerouno.com");
+        assertThat(usuarioService.findById(u.getId())).isPresent();
+        assertThat(usuarioService.findById(u.getId()).get().getCorreo())
+                .isEqualTo("laura@zerouno.com");
     }
 
     @Test
-    void actualizarUsuario() {
-        Usuario u = repo.save(new Usuario("Javier", "javier@zerouno.com"));
-        u.setNombre("Javi");
-        repo.save(u);
+    void actualizarUsuario_conService() {
+        Usuario u = usuarioService.save(new Usuario("Javier", "javier@zerouno.com"));
 
-        Usuario loaded = repo.findById(u.getId()).orElseThrow();
-        assertThat(loaded.getNombre()).isEqualTo("Javi");
+        Usuario cambios = new Usuario("Javi", "javi@zerouno.com");
+        Usuario actualizado = usuarioService.update(u.getId(), cambios);
+
+        assertThat(actualizado.getId()).isEqualTo(u.getId());
+        assertThat(actualizado.getNombre()).isEqualTo("Javi");
+        assertThat(actualizado.getCorreo()).isEqualTo("javi@zerouno.com");
     }
 
     @Test
-    void eliminarUsuario() {
-        Usuario u = repo.save(new Usuario("Ana", "ana@zerouno.com"));
+    void eliminarUsuario_conService() {
+        Usuario u = usuarioService.save(new Usuario("Ana", "ana@zerouno.com"));
         Long id = u.getId();
-        repo.deleteById(id);
 
-        assertThat(repo.findById(id)).isNotPresent();
+        usuarioService.deleteById(id);
+
+        assertThat(usuarioService.findById(id)).isNotPresent();
+    }
+
+    @Test
+    void findAllUsuarios_conService() {
+        usuarioService.save(new Usuario("User1", "user1@zerouno.com"));
+        usuarioService.save(new Usuario("User2", "user2@zerouno.com"));
+
+        List<Usuario> todos = usuarioService.findAll();
+
+        assertThat(todos).hasSizeGreaterThanOrEqualTo(2);
+        assertThat(todos.stream().anyMatch(u -> u.getCorreo().equals("user1@zerouno.com")))
+                .isTrue();
+        assertThat(todos.stream().anyMatch(u -> u.getCorreo().equals("user2@zerouno.com")))
+                .isTrue();
     }
 }

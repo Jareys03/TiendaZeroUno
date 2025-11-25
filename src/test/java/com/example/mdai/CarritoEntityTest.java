@@ -2,12 +2,11 @@ package com.example.mdai;
 
 import com.example.mdai.model.Carrito;
 import com.example.mdai.model.Usuario;
-import com.example.mdai.repository.CarritoRepository;
-import com.example.mdai.repository.UsuarioRepository;
+import com.example.mdai.services.CarritoService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,19 +15,18 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@DataJpaTest
+@SpringBootTest
 class CarritoEntityTest {
 
     @Autowired
-    CarritoRepository carritoRepo;
-    @Autowired
-    UsuarioRepository usuarioRepo;
+    CarritoService carritoService;
 
     @Test
     void crearCarritoParaUsuario() {
 
-        Carrito c = carritoRepo.findById(1L)
-                .orElseGet(() -> carritoRepo.findAll().iterator().next());
+        // Usamos el service en lugar del repositorio
+        Carrito c = carritoService.findById(1L)
+                .orElseGet(() -> carritoService.findAll().get(0));
 
         Usuario u = c.getUsuario();
 
@@ -42,21 +40,24 @@ class CarritoEntityTest {
 
     @Test
     void obtenerPorId_existente() {
-        Carrito c = carritoRepo.findAll().iterator().next();
-        assertThat(carritoRepo.findById(c.getId())).isPresent();
-        assertThat(carritoRepo.findById(c.getId()).orElseThrow().getId()).isEqualTo(c.getId());
+        Carrito c = carritoService.findAll().get(0);
+
+        assertThat(carritoService.findById(c.getId())).isPresent();
+        assertThat(carritoService.findById(c.getId()).orElseThrow().getId())
+                .isEqualTo(c.getId());
     }
 
     @Test
     void obtenerPorId_noExiste() {
         Long inexistente = 999999L;
-        assertThat(carritoRepo.findById(inexistente)).isEmpty();
+        assertThat(carritoService.findById(inexistente)).isEmpty();
     }
 
     @Test
     void obtenerPorIdOrThrow_noExiste_deberiaLanzar() {
         Long inexistente = 999999L;
-        assertThatThrownBy(() -> carritoRepo.findById(inexistente)
+
+        assertThatThrownBy(() -> carritoService.findById(inexistente)
                 .orElseThrow(() -> new EntityNotFoundException("Carrito no encontrado: " + inexistente)))
                 .isInstanceOf(EntityNotFoundException.class);
     }
@@ -64,12 +65,11 @@ class CarritoEntityTest {
     @Test
     void listarPorUsuario() {
         // Usa carritos existentes para evitar violar la restricción 1-1
-        Carrito ejemplo = carritoRepo.findAll().iterator().next();
+        Carrito ejemplo = carritoService.findAll().get(0);
         Usuario u = ejemplo.getUsuario();
         assertThat(u).isNotNull();
 
-        List<Carrito> all = new ArrayList<>();
-        carritoRepo.findAll().forEach(all::add);
+        List<Carrito> all = new ArrayList<>(carritoService.findAll());
 
         List<Carrito> porUsuario = all.stream()
                 .filter(c -> c.getUsuario() != null && u.getId().equals(c.getUsuario().getId()))
@@ -81,9 +81,11 @@ class CarritoEntityTest {
 
     @Test
     void eliminarCarrito_existente() {
-        Carrito c = carritoRepo.findAll().iterator().next();
+        Carrito c = carritoService.findAll().get(0);
         Long id = c.getId();
-        carritoRepo.deleteById(id);
-        assertThat(carritoRepo.findById(id)).isEmpty();
+
+        carritoService.deleteById(id);
+
+        assertThat(carritoService.findById(id)).isEmpty();
     }
 }

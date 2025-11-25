@@ -2,22 +2,21 @@ package com.example.mdai;
 
 import com.example.mdai.model.Usuario;
 import com.example.mdai.services.UsuarioService;
-import com.example.mdai.services.UsuarioServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest(properties = "spring.sql.init.mode=never")
-@Import(UsuarioServiceImpl.class)
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class UsuarioEntityTest {
 
     @Autowired
-    UsuarioService usuarioService;   // usamos la interfaz del servicio
+    UsuarioService usuarioService;
 
     @Test
     void crearYLeerUsuario_conService() {

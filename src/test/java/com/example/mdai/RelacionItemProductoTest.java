@@ -14,7 +14,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// Evita que se ejecute data.sql en este slice
 @DataJpaTest(properties = "spring.sql.init.mode=never")
 class RelacionItemProductoTest {
 
@@ -25,14 +24,36 @@ class RelacionItemProductoTest {
 
     @Test
     void itemReferenciaProducto() {
+
+        // Crear producto con id persistido
         Producto p = productoRepo.save(new Producto("USB-C Cable", 8.50));
-        Usuario u = usuarioRepo.save(new Usuario("Rafa","rafa@zerouno.com"));
+
+        // Crear usuario + carrito
+        Usuario u = usuarioRepo.save(new Usuario("Rafa", "rafa@zerouno.com"));
         Carrito c = carritoRepo.save(new Carrito(u));
 
-        ItemCarrito item = itemRepo.save(new ItemCarrito(c, p, 2, p.getPrecio()));
+        // Crear item a mano (2 unidades → subtotal 17.0)
+        ItemCarrito item = itemRepo.save(
+                new ItemCarrito(c, p, 2, p.getPrecio())
+        );
+
+        // Cargar desde BD para verificar que la relación funciona
         ItemCarrito loaded = itemRepo.findById(item.getId()).orElseThrow();
 
+        // --- ASERCIONES ---
+        // Relación Item → Producto
+        assertThat(loaded.getProducto()).isNotNull();
+        assertThat(loaded.getProducto().getId()).isEqualTo(p.getId());
         assertThat(loaded.getProducto().getNombre()).isEqualTo("USB-C Cable");
+
+        // Subtotal = cantidad × precioUnitario
         assertThat(loaded.getSubtotal()).isEqualTo(17.0);
+
+        // El precioUnitario debe quedar guardado incluso si cambia el precio del producto
+        assertThat(loaded.getPrecioUnitario()).isEqualTo(8.50);
+
+        // Relación Item → Carrito
+        assertThat(loaded.getCarrito()).isNotNull();
+        assertThat(loaded.getCarrito().getId()).isEqualTo(c.getId());
     }
 }

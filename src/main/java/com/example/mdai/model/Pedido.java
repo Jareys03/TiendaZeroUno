@@ -14,7 +14,7 @@ public class Pedido {
     @Column(nullable = false)
     private double total;
 
-    protected Pedido() {}
+    public Pedido() {}
 
     public Pedido(String numero, double total) {
         this.numero = numero;
@@ -27,4 +27,6 @@ public class Pedido {
     public void setNumero(String numero) { this.numero = numero; }
     public double getTotal() { return total; }
     public void setTotal(double total) { this.total = total; }
+
+
 }

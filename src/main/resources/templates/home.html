@@ -1,16 +1,95 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8"/>
     <title>TiendaZeroUno</title>
-    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}" />
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <!-- CSS propio -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body class="container py-4">
-<h1>TiendaZeroUno</h1>
-<hr/>
-<ul>
-    <li><a th:href="@{/usuarios}">Usuarios</a></li>
-    <li><a th:href="@{/productos}">Productos</a></li>
-</ul>
+
+<body>
+
+<div class="container main-wrapper">
+    <div class="card card-main w-100">
+        <div class="card-body p-4 p-md-5">
+
+            <!-- Encabezado -->
+            <div class="text-center mb-4">
+                <h1 class="header-title">🛒 TiendaZeroUno</h1>
+                <p class="header-subtitle text-secondary">
+                    Panel interno para gestión de usuarios, productos y pedidos.
+                </p>
+                <span class="badge-tag">Módulo de administración</span>
+                <hr class="mt-4">
+            </div>
+
+            <!-- GRID 2x2 fijo -->
+            <div class="row g-4 justify-content-center">
+
+                <div class="col-md-5">
+                    <a th:href="@{/usuarios}" class="text-decoration-none text-dark">
+                        <div class="card menu-card text-center h-100">
+                            <div class="card-body py-4">
+                                <h4 class="card-title mb-2">👤 Usuarios</h4>
+                                <p class="card-text text-secondary mb-0">
+                                    Alta, edición y gestión de usuarios registrados.
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-5">
+                    <a th:href="@{/productos}" class="text-decoration-none text-dark">
+                        <div class="card menu-card text-center h-100">
+                            <div class="card-body py-4">
+                                <h4 class="card-title mb-2">📦 Productos</h4>
+                                <p class="card-text text-secondary mb-0">
+                                    Catálogo de productos y su información básica.
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-5">
+                    <a th:href="@{/carrito}" class="text-decoration-none text-dark">
+                        <div class="card menu-card text-center h-100">
+                            <div class="card-body py-4">
+                                <h4 class="card-title mb-2">🛍 Carrito</h4>
+                                <p class="card-text text-secondary mb-0">
+                                    Vista del carrito de compra activo (próximamente).
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-5">
+                    <a th:href="@{/pedidos}" class="text-decoration-none text-dark">
+                        <div class="card menu-card text-center h-100">
+                            <div class="card-body py-4">
+                                <h4 class="card-title mb-2">📑 Pedidos</h4>
+                                <p class="card-text text-secondary mb-0">
+                                    Historial de pedidos y estado de los mismos.
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+            </div>
+
+            <div class="text-center mt-4 footer-text">
+                TiendaZeroUno · Panel interno de ejemplo
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

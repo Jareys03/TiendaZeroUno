@@ -9,14 +9,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringBootTest
+@SpringBootTest(properties = "spring.sql.init.mode=never")
 class DireccionEntityTest {
 
     @Autowired
@@ -25,18 +23,29 @@ class DireccionEntityTest {
     @Autowired
     private UsuarioService usuarioService;
 
+    // Helper
+    private Usuario crearUsuario(String nombre, String correo) {
+        Usuario u = new Usuario(nombre, correo);
+        return usuarioService.registrarUsuario(u);
+    }
+
     @Test
     void crearYLeerDireccion() {
-        // Usuario de prueba (ya existente en data.sql)
-        Usuario u = usuarioService.buscarPorCorreo("javier@example.com")
-                .orElseThrow();
+        Usuario u = crearUsuario("Javier", "javier@example.com");
 
         Direccion d = new Direccion("C/ Sol 123", "Badajoz");
-
-        // CASO DE USO → agregar dirección al usuario
         usuarioService.agregarDireccion(u.getId(), d);
 
-        Long idDireccion = d.getId();
+        // Buscar la dirección recién creada SIN usar usuario.getDirecciones()
+        List<Direccion> all = direccionService.findAll();
+        Direccion dirPersistida = all.stream()
+                .filter(dir -> "C/ Sol 123".equals(dir.getCalle())
+                        && dir.getUsuario() != null
+                        && u.getId().equals(dir.getUsuario().getId()))
+                .findFirst()
+                .orElseThrow();
+
+        Long idDireccion = dirPersistida.getId();
 
         Direccion loaded = direccionService.findById(idDireccion)
                 .orElseThrow();
@@ -47,13 +56,20 @@ class DireccionEntityTest {
 
     @Test
     void eliminarDireccion() {
-        Usuario u = usuarioService.buscarPorCorreo("laura@example.com")
-                .orElseThrow();
+        Usuario u = crearUsuario("Laura", "laura@example.com");
 
         Direccion d = new Direccion("C/ Río 5", "Mérida");
         usuarioService.agregarDireccion(u.getId(), d);
 
-        Long id = d.getId();
+        List<Direccion> all = direccionService.findAll();
+        Direccion dirPersistida = all.stream()
+                .filter(dir -> "C/ Río 5".equals(dir.getCalle())
+                        && dir.getUsuario() != null
+                        && u.getId().equals(dir.getUsuario().getId()))
+                .findFirst()
+                .orElseThrow();
+
+        Long id = dirPersistida.getId();
 
         direccionService.deleteById(id);
 
@@ -62,14 +78,23 @@ class DireccionEntityTest {
 
     @Test
     void obtenerPorId_existente() {
-        Usuario u = usuarioService.buscarPorCorreo("javier@example.com")
-                .orElseThrow();
+        Usuario u = crearUsuario("Javier2", "javier2@example.com");
 
         Direccion d = new Direccion("C/ Olivo 7", "Cáceres");
         usuarioService.agregarDireccion(u.getId(), d);
 
-        assertThat(direccionService.findById(d.getId())).isPresent();
-        assertThat(direccionService.findById(d.getId()).orElseThrow().getCalle())
+        List<Direccion> all = direccionService.findAll();
+        Direccion dirPersistida = all.stream()
+                .filter(dir -> "C/ Olivo 7".equals(dir.getCalle())
+                        && dir.getUsuario() != null
+                        && u.getId().equals(dir.getUsuario().getId()))
+                .findFirst()
+                .orElseThrow();
+
+        Long id = dirPersistida.getId();
+
+        assertThat(direccionService.findById(id)).isPresent();
+        assertThat(direccionService.findById(id).orElseThrow().getCalle())
                 .isEqualTo("C/ Olivo 7");
     }
 
@@ -91,10 +116,8 @@ class DireccionEntityTest {
 
     @Test
     void listarPorUsuario() {
-        Usuario u1 = usuarioService.buscarPorCorreo("javier@example.com")
-                .orElseThrow();
-        Usuario u2 = usuarioService.buscarPorCorreo("laura@example.com")
-                .orElseThrow();
+        Usuario u1 = crearUsuario("JavierList", "javier.list@example.com");
+        Usuario u2 = crearUsuario("LauraList", "laura.list@example.com");
 
         Direccion a1 = new Direccion("C/ A 1", "CiudadA");
         Direccion a2 = new Direccion("C/ A 2", "CiudadA");
@@ -104,7 +127,6 @@ class DireccionEntityTest {
         usuarioService.agregarDireccion(u1.getId(), a2);
         usuarioService.agregarDireccion(u2.getId(), b1);
 
-        // Obtener TODAS las direcciones desde el servicio
         List<Direccion> all = direccionService.findAll();
 
         List<Direccion> porUsuario1 = all.stream()
@@ -112,7 +134,7 @@ class DireccionEntityTest {
                         u1.getId().equals(d.getUsuario().getId()))
                 .toList();
 
-        assertThat(porUsuario1).hasSizeGreaterThanOrEqualTo(2);
+        assertThat(porUsuario1).hasSize(2);
         assertThat(porUsuario1).allMatch(d -> u1.getId().equals(d.getUsuario().getId()));
     }
 }

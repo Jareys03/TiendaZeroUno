@@ -2,61 +2,87 @@ package com.example.mdai;
 
 import com.example.mdai.model.Producto;
 import com.example.mdai.services.ProductoService;
+import com.example.mdai.services.ProductoServiceImpl;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@DataJpaTest
+@Import(ProductoServiceImpl.class)
 class ProductoEntityTest {
 
     @Autowired
     ProductoService productoService;
 
+    @Autowired
+    EntityManager em;
+
+    /** Sube el identity de PRODUCTO a (MAX(id)+1) para no chocar con los de data.sql */
+    private void bumpProductoIdentity() {
+        Long next = ((Number) em.createNativeQuery(
+                "SELECT COALESCE(MAX(ID),0)+1 FROM PRODUCTO"
+        ).getSingleResult()).longValue();
+
+        em.createNativeQuery(
+                "ALTER TABLE PRODUCTO ALTER COLUMN ID RESTART WITH " + next
+        ).executeUpdate();
+    }
+
     @Test
     void crearProducto_conService() {
-        Producto nuevo = new Producto("Cable HDMI (test)", 39.90);
-        Producto guardado = productoService.save(nuevo);
+        bumpProductoIdentity();
 
-        assertThat(guardado.getId()).isNotNull();
-        assertThat(guardado.getNombre()).isEqualTo("Cable HDMI (test)");
-        assertThat(guardado.getPrecio()).isEqualTo(39.90);
+        Producto p = new Producto("Impresora HP", 129.99);
+        p = productoService.save(p);
 
-        assertThat(productoService.findById(guardado.getId())).isPresent();
+        assertThat(p.getId()).isNotNull();
+        assertThat(p.getNombre()).isEqualTo("Impresora HP");
+        assertThat(p.getPrecio()).isEqualTo(129.99);
     }
 
     @Test
     void actualizarProducto_conService() {
-        Producto p = productoService.save(new Producto("Teclado HP", 20.0));
+        bumpProductoIdentity();
 
-        Producto cambios = new Producto("Teclado HP (modificado)", 25.5);
+        Producto p = productoService.save(new Producto("Portátil viejo", 400.00));
+
+        Producto cambios = new Producto("Portátil nuevo", 799.99);
         Producto actualizado = productoService.update(p.getId(), cambios);
 
-        assertThat(actualizado.getNombre()).isEqualTo("Teclado HP (modificado)");
-        assertThat(actualizado.getPrecio()).isEqualTo(25.5);
+        assertThat(actualizado.getId()).isEqualTo(p.getId());
+        assertThat(actualizado.getNombre()).isEqualTo("Portátil nuevo");
+        assertThat(actualizado.getPrecio()).isEqualTo(799.99);
     }
 
     @Test
     void eliminarProducto_conService() {
-        Producto p = productoService.save(new Producto("Producto temporal", 10.0));
+        bumpProductoIdentity();
+
+        Producto p = productoService.save(new Producto("Altavoz Bluetooth", 49.99));
         Long id = p.getId();
 
         productoService.deleteById(id);
 
-        assertThat(productoService.findById(id)).isEmpty();
+        assertThat(productoService.findById(id)).isNotPresent();
     }
 
     @Test
     void findAllProductos_conService() {
-        productoService.save(new Producto("Prod1", 5.0));
-        productoService.save(new Producto("Prod2", 6.0));
+        bumpProductoIdentity();
 
-        List<Producto> todos = productoService.findAll();
+        productoService.save(new Producto("Producto1", 10.0));
+        productoService.save(new Producto("Producto2", 20.0));
 
-        assertThat(todos.size()).isGreaterThan(1);
-        assertThat(todos.stream().anyMatch(p -> p.getNombre().equals("Prod1"))).isTrue();
+        List<Producto> productos = productoService.findAll();
+
+        assertThat(productos).hasSizeGreaterThanOrEqualTo(2);
+        assertThat(productos.stream().anyMatch(p -> p.getNombre().equals("Producto1"))).isTrue();
+        assertThat(productos.stream().anyMatch(p -> p.getNombre().equals("Producto2"))).isTrue();
     }
 }

@@ -19,7 +19,7 @@ public class Direccion {
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-    protected Direccion() {}
+    public Direccion() {}
 
     public Direccion(String calle, String ciudad) {
         this.calle = calle;
@@ -27,12 +27,30 @@ public class Direccion {
     }
 
     // getters/setters
-    public Long getId() { return id; }
-    public String getCalle() { return calle; }
-    public void setCalle(String calle) { this.calle = calle; }
-    public String getCiudad() { return ciudad; }
-    public void setCiudad(String ciudad) { this.ciudad = ciudad; }
+    public Long getId() {
+        return id;
+    }
+    public String getCalle() {
+        return calle;
+    }
+    public void setCalle(String calle) {
+        this.calle = calle;
+    }
+    public String getCiudad() {
+        return ciudad;
+    }
+    public void setCiudad(String ciudad) {
+        this.ciudad = ciudad;
+    }
 
-    public Usuario getUsuario() { return usuario; }
-    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
+    public Usuario getUsuario() {
+        return usuario;
+    }
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
+
+    public void setId(Long direccionId) {
+        this.id = direccionId;
+    }
 }

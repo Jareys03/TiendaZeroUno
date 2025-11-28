@@ -9,7 +9,12 @@ public class HomeController {
 
 
     @GetMapping("/")
-    public String home() {
-        return "home"; // templates/index.html
+    public String inicio() {
+        return "register"; // página pública de inicio con login/registro
+    }
+
+    @GetMapping("/admin")
+    public String admin() {
+        return "home"; // vista existente de administrador
     }
 }

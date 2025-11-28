@@ -72,12 +72,13 @@ INSERT INTO PRODUCTO (ID, NOMBRE, PRECIO) VALUES
 
 
 -- 3) USUARIOS
-INSERT INTO USUARIOS (ID, NOMBRE, CORREO) VALUES
-                                              (1, 'Javier', 'javier@example.com'),
-                                              (2, 'Laura', 'laura@example.com'),
-                                              (3, 'Carlos', 'carlos@example.com'),
-                                              (4, 'Ana', 'ana@example.com'),
-                                              (5, 'María', 'maria@example.com');
+-- Se asigna una contraseña por defecto 'password' a todos los usuarios seed (contraseña en texto plano por simplicidad)
+INSERT INTO USUARIOS (ID, NOMBRE, CORREO, PASSWORD) VALUES
+                                              (1, 'Javier', 'javier@example.com', 'pass1'),
+                                              (2, 'Laura', 'laura@example.com', 'pass2'),
+                                              (3, 'Carlos', 'carlos@example.com', 'pass3'),
+                                              (4, 'Ana', 'ana@example.com', 'pass4'),
+                                              (5, 'María', 'maria@example.com', 'passw5');
 
 -- 4) CARRITOS
 INSERT INTO CARRITO (ID, USUARIO_ID) VALUES

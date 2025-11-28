@@ -1,5 +1,5 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
     <title>TiendaZeroUno</title>
@@ -13,6 +13,8 @@
 
 <body>
 
+<header th:replace="fragments/navbar :: navbar"></header>
+
 <div class="container main-wrapper">
     <div class="card card-main w-100">
         <div class="card-body p-4 p-md-5">
@@ -25,6 +27,11 @@
                 </p>
                 <span class="badge-tag">Módulo de administración</span>
                 <hr class="mt-4">
+
+                <!-- Botón para volver a la página pública (index) -->
+                <div class="d-flex justify-content-start">
+                    <a th:href="@{/}" class="btn btn-outline-primary btn-sm">← Volver al inicio</a>
+                </div>
             </div>
 
             <!-- GRID 2x2 fijo -->

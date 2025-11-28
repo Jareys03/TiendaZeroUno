@@ -1,37 +1,147 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" lang="es">
-<head th:replace="fragments/head :: head('Registrarse | TiendaZeroUno')"></head>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Bienvenido · TiendaZeroUno</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        /* Header visual mejorado */
+        .page-header { text-align: center; margin: 2.5rem 0 1rem; }
+        .hero-box {
+            background: linear-gradient(90deg, rgba(37,99,235,0.06), rgba(79,70,229,0.04));
+            border-radius: 12px;
+            padding: 1.6rem 1.2rem;
+            box-shadow: 0 8px 24px rgba(15,23,42,0.06);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .brand-left { display:flex; align-items:center; gap:0.9rem; text-align:left; }
+        .brand-logo { font-size:2rem; }
+        .brand-title { font-size:1.5rem; margin:0; color:#0f172a; font-weight:700; }
+        .brand-sub { margin:0; color:#475569; }
+
+        .hero-ctas { display:flex; gap:0.6rem; align-items:center; }
+        .btn-primary-cta {
+            background: linear-gradient(90deg,#2563eb,#4f46e5);
+            border: none;
+            color: #fff;
+            padding: 0.5rem 0.9rem;
+            border-radius: 8px;
+            font-weight:600;
+            box-shadow: 0 6px 18px rgba(79,70,229,0.12);
+        }
+        .btn-outline-cta {
+            border-radius: 8px;
+            padding: 0.45rem 0.8rem;
+            border: 1px solid rgba(15,23,42,0.06);
+            background: transparent;
+        }
+
+        .page-header p { color: #6b7280; margin: 0; }
+        .auth-wrapper { max-width: 900px; margin: 1rem auto 4rem; }
+        .admin-back-btn {
+            position: fixed;
+            left: 16px;
+            bottom: 16px;
+            z-index: 9999;
+        }
+
+        @media (max-width: 767px) {
+            .hero-box { padding: 1rem; }
+            .brand-title { font-size: 1.25rem; }
+            .hero-ctas { margin-top: 0.5rem; width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
 <body>
 
-<header th:replace="fragments/navbar :: navbar()"></header>
+<header th:replace="fragments/navbar :: navbar"></header>
 
-<main class="container py-5 d-flex justify-content-center">
-    <div class="card w-50">
-        <div class="card-body p-4">
-            <h2 class="mb-3">Registrarse</h2>
-            <form th:action="@{/register}" th:method="post">
-                <div class="mb-3">
-                    <label class="form-label">Nombre</label>
-                    <input type="text" name="nombre" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Pass</label>
-                    <input type="password" name="password" class="form-control" required>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <button type="submit" class="btn btn-primary">Crear cuenta</button>
-                    <a th:href="@{/login}" class="btn btn-link">Ya tengo cuenta</a>
-                </div>
-            </form>
+<!-- Encabezado: título y descripción breve (mejorado visualmente) -->
+<div class="container page-header">
+    <div class="hero-box">
+        <div class="brand-left">
+            <div class="brand-logo">🛒</div>
+            <div>
+                <h2 class="brand-title">TiendaZeroUno</h2>
+                <p class="brand-sub">Tu tienda online de ejemplo — productos seleccionados y compra sencilla.</p>
+            </div>
+        </div>
+
+        <div class="hero-ctas">
+            <a href="/productos" class="btn btn-primary-cta">Ver productos</a>
+            <a href="/admin" class="btn btn-outline-cta"> Ir al panel administrador</a>
         </div>
     </div>
-</main>
+    <p style="margin-top:0.8rem;">Productos seleccionados, compras sencillas y un carrito para gestionar tus artículos favoritos.</p>
+</div>
 
-<footer th:replace="fragments/footer :: footer()"></footer>
+<div class="container auth-wrapper">
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="mb-3">Iniciar sesión</h3>
 
+                    <!-- Formulario de login -->
+                    <form method="post" th:action="@{/login}">
+                        <div th:if="${loginError}" class="alert alert-danger" th:text="${loginError}"></div>
+                        <div class="mb-3">
+                            <label class="form-label" for="login-correo">Correo</label>
+                            <input id="login-correo" type="email" name="correo" th:value="${loginCorreo}" class="form-control" placeholder="tu@correo.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="login-password">Contraseña</label>
+                            <input id="login-password" type="password" name="password" class="form-control" placeholder="••••••" required>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button class="btn btn-primary">Entrar</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="mb-3">Registro rápido</h3>
+
+                    <!-- Formulario de registro: usa los campos esperados por UsuarioController -->
+                    <form method="post" th:action="@{/usuarios}">
+                        <div class="mb-3">
+                            <label class="form-label" for="reg-nombre">Nombre</label>
+                            <input id="reg-nombre" type="text" name="nombre" class="form-control" placeholder="Tu nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="reg-correo">Correo</label>
+                            <input id="reg-correo" type="email" name="correo" class="form-control" placeholder="tu@correo.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="reg-password">Contraseña</label>
+                            <input id="reg-password" type="password" name="password" class="form-control" placeholder="••••••" required>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button class="btn btn-success">Crear cuenta</button>
+                        </div>
+                    </form>
+
+                    <hr>
+                    <small class="text-secondary">Al registrarte se creará un usuario básico (sin contraseña). Si quieres, usa la opción "Registro" en el panel de administración para campos adicionales.</small>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

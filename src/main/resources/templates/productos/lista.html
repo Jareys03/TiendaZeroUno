@@ -10,7 +10,11 @@
 </head>
 <body>
 
+<header th:replace="fragments/navbar :: navbar"></header>
+
 <div class="container py-5">
+
+  <div th:if="${mensaje}" class="alert alert-success" th:text="${mensaje}"></div>
 
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -56,6 +60,12 @@
                    onclick="return confirm('¿Eliminar este producto?');">
                   🗑 Eliminar
                 </a>
+                <!-- Formulario simple para añadir al carrito (usuarios) -->
+                <form th:action="@{/carrito/agregar}" method="post" style="display:inline-block; margin-left:6px;">
+                  <input type="hidden" name="productoId" th:value="${p.id}" />
+                  <input type="hidden" name="cantidad" value="1" />
+                  <button class="btn btn-success" type="submit">➕ Añadir</button>
+                </form>
               </div>
             </td>
           </tr>

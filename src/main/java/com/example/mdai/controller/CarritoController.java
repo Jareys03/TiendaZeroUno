@@ -68,6 +68,13 @@ public class CarritoController {
             HttpSession session,
             RedirectAttributes redirectAttrs) {
 
+        // Requerir login: si no hay usuario en sesión, redirigir a /login con mensaje
+        if (session.getAttribute("usuarioLogeado") == null) {
+            redirectAttrs.addFlashAttribute("loginError", "Debes iniciar sesión para añadir productos al carrito");
+            // opcional: mantener el correo en el formulario
+            return "redirect:/login";
+        }
+
         Map<Long, Integer> carrito = obtenerCarrito(session);
 
         int cantidadActual = carrito.getOrDefault(productoId, 0);

@@ -1,0 +1,44 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="fragments/head :: head('Pedidos | TiendaZeroUno')"></head>
+<body>
+
+<header th:replace="fragments/navbar :: navbar()"></header>
+
+<main class="container py-5">
+  <div class="mb-4 d-flex justify-content-between align-items-center">
+    <div>
+      <h2>Pedidos</h2>
+      <small class="text-secondary">Listado de pedidos</small>
+    </div>
+    <a th:href="@{/}" class="btn btn-outline-secondary btn-sm">⬅ Volver</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-4">
+      <table class="table">
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Cliente</th>
+          <th>Total</th>
+          <th>Estado</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="pedido : ${pedidos}">
+          <td th:text="${pedido.id}">1</td>
+          <td th:text="${pedido.clienteNombre}">Nombre</td>
+          <td th:text="${pedido.total}">0.00</td>
+          <td th:text="${pedido.estado}">Pendiente</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<footer th:replace="fragments/footer :: footer()"></footer>
+
+</body>
+</html>

@@ -17,6 +17,9 @@ public class Usuario {
     @Column(nullable=false, unique=true, length=150)
     private String correo;
 
+    @Column(nullable = true, length = 150)
+    private String password;
+
     // Relación 1..N con Direccion
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Direccion> direcciones = new ArrayList<>();
@@ -26,6 +29,12 @@ public class Usuario {
     public Usuario(String nombre, String correo) {
         this.nombre = nombre;
         this.correo = correo;
+    }
+
+    public Usuario(String nombre, String correo, String password) {
+        this.nombre = nombre;
+        this.correo = correo;
+        this.password = password;
     }
 
     // ===== Helpers para mantener ambos lados sincronizados =====
@@ -49,4 +58,7 @@ public class Usuario {
     public void setCorreo(String correo) { this.correo = correo; }
     public List<Direccion> getDirecciones() { return direcciones; }
     public void setDirecciones(List<Direccion> direcciones) { this.direcciones = direcciones; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 }

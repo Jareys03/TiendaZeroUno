@@ -1,5 +1,7 @@
 package com.example.mdai.services;
 
+import com.example.mdai.exception.ResourceNotFoundException;
+import com.example.mdai.exception.ServiceException;
 import com.example.mdai.model.ItemCarrito;
 import com.example.mdai.repository.ItemCarritoRepository;
 import org.springframework.stereotype.Service;
@@ -21,52 +23,85 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
     @Override
     @Transactional(readOnly = true)
     public List<ItemCarrito> findAll() {
-        return itemCarritoRepository.findAll();
+        try {
+            return itemCarritoRepository.findAll();
+        } catch (Exception e) {
+            throw new ServiceException("Error al listar items del carrito", e);
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<ItemCarrito> findById(Long id) {
-        return itemCarritoRepository.findById(id);
+        try {
+            return itemCarritoRepository.findById(id);
+        } catch (Exception e) {
+            throw new ServiceException("Error al buscar itemCarrito por id: " + id, e);
+        }
     }
 
     @Override
     public ItemCarrito save(ItemCarrito itemCarrito) {
-        validarItem(itemCarrito);
-        return itemCarritoRepository.save(itemCarrito);
+        try {
+            validarItem(itemCarrito);
+            return itemCarritoRepository.save(itemCarrito);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServiceException("Error al guardar itemCarrito", e);
+        }
     }
 
     @Override
     public ItemCarrito update(Long id, ItemCarrito itemCarrito) {
-        validarItem(itemCarrito);
+        try {
+            validarItem(itemCarrito);
 
-        return itemCarritoRepository.findById(id)
-                .map(existing -> {
-                    existing.setCarrito(itemCarrito.getCarrito());
-                    existing.setProducto(itemCarrito.getProducto());
-                    existing.setCantidad(itemCarrito.getCantidad());
-                    existing.setPrecioUnitario(itemCarrito.getPrecioUnitario());
-                    return itemCarritoRepository.save(existing);
-                })
-                .orElseThrow(() ->
-                        new IllegalArgumentException("ItemCarrito no encontrado con id: " + id));
+            return itemCarritoRepository.findById(id)
+                    .map(existing -> {
+                        existing.setCarrito(itemCarrito.getCarrito());
+                        existing.setProducto(itemCarrito.getProducto());
+                        existing.setCantidad(itemCarrito.getCantidad());
+                        existing.setPrecioUnitario(itemCarrito.getPrecioUnitario());
+                        return itemCarritoRepository.save(existing);
+                    })
+                    .orElseThrow(() -> new ResourceNotFoundException("ItemCarrito no encontrado con id: " + id));
+        } catch (ResourceNotFoundException e) {
+            throw e;
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServiceException("Error al actualizar itemCarrito id: " + id, e);
+        }
     }
 
     @Override
     public void deleteById(Long id) {
-        itemCarritoRepository.deleteById(id);
+        try {
+            itemCarritoRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new ServiceException("Error al eliminar itemCarrito id: " + id, e);
+        }
     }
 
 
     @Override
     @Transactional(readOnly = true)
     public List<ItemCarrito> findByCarritoId(Long carritoId) {
-        return itemCarritoRepository.findByCarrito_Id(carritoId);
+        try {
+            return itemCarritoRepository.findByCarrito_Id(carritoId);
+        } catch (Exception e) {
+            throw new ServiceException("Error al buscar items por carrito id: " + carritoId, e);
+        }
     }
 
     @Override
     public long deleteByCarritoId(Long carritoId) {
-        return itemCarritoRepository.deleteByCarrito_Id(carritoId);
+        try {
+            return itemCarritoRepository.deleteByCarrito_Id(carritoId);
+        } catch (Exception e) {
+            throw new ServiceException("Error al eliminar items por carrito id: " + carritoId, e);
+        }
     }
 
 

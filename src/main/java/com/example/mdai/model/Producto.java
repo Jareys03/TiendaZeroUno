@@ -14,6 +14,11 @@ public class Producto {
     @Column(nullable = false)
     private double precio;
 
+    // Relación a categoría (muchos productos pueden pertenecer a una categoría)
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "categoria_id")
+    private Categoria categoria;
+
     public Producto() {}
 
     public Producto(String nombre, double precio) {
@@ -27,4 +32,7 @@ public class Producto {
     public void setNombre(String nombre) { this.nombre = nombre; }
     public double getPrecio() { return precio; }
     public void setPrecio(double precio) { this.precio = precio; }
+
+    public Categoria getCategoria() { return categoria; }
+    public void setCategoria(Categoria categoria) { this.categoria = categoria; }
 }

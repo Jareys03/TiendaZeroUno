@@ -1,5 +1,7 @@
 package com.example.mdai.services;
 
+import com.example.mdai.exception.ResourceNotFoundException;
+import com.example.mdai.exception.ServiceException;
 import com.example.mdai.model.Direccion;
 import com.example.mdai.model.Usuario;
 import com.example.mdai.repository.UsuarioRepository;
@@ -27,35 +29,57 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     @Transactional(readOnly = true)
     public List<Usuario> findAll() {
-        return (List<Usuario>) usuarioRepository.findAll();
+        try {
+            return (List<Usuario>) usuarioRepository.findAll();
+        } catch (Exception e) {
+            throw new ServiceException("Error al listar usuarios", e);
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<Usuario> findById(Long id) {
-        return usuarioRepository.findById(id);
+        try {
+            return usuarioRepository.findById(id);
+        } catch (Exception e) {
+            throw new ServiceException("Error al buscar usuario por id: " + id, e);
+        }
     }
 
     @Override
     public Usuario save(Usuario usuario) {
-        return usuarioRepository.save(usuario);
+        try {
+            return usuarioRepository.save(usuario);
+        } catch (Exception e) {
+            throw new ServiceException("Error al guardar usuario", e);
+        }
     }
 
     @Override
     public Usuario update(Long id, Usuario usuario) {
-        return usuarioRepository.findById(id)
-                .map(existing -> {
-                    existing.setNombre(usuario.getNombre());
-                    existing.setCorreo(usuario.getCorreo());
-                    // las direcciones se gestionan con agregarDireccion/quitarDireccion
-                    return usuarioRepository.save(existing);
-                })
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con id: " + id));
+        try {
+            return usuarioRepository.findById(id)
+                    .map(existing -> {
+                        existing.setNombre(usuario.getNombre());
+                        existing.setCorreo(usuario.getCorreo());
+                        // las direcciones se gestionan con agregarDireccion/quitarDireccion
+                        return usuarioRepository.save(existing);
+                    })
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
+        } catch (ResourceNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServiceException("Error al actualizar usuario id: " + id, e);
+        }
     }
 
     @Override
     public void deleteById(Long id) {
-        usuarioRepository.deleteById(id);
+        try {
+            usuarioRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new ServiceException("Error al eliminar usuario id: " + id, e);
+        }
     }
 
     // =======================
@@ -64,51 +88,83 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public Usuario registrarUsuario(Usuario usuario) {
-        if (usuario.getCorreo() == null || usuario.getCorreo().isBlank()) {
-            throw new IllegalArgumentException("El correo es obligatorio para registrar un usuario");
+        try {
+            if (usuario.getCorreo() == null || usuario.getCorreo().isBlank()) {
+                throw new IllegalArgumentException("El correo es obligatorio para registrar un usuario");
+            }
+            if (usuarioRepository.existsByCorreo(usuario.getCorreo())) {
+                throw new IllegalArgumentException("Ya existe un usuario con el correo: " + usuario.getCorreo());
+            }
+            return usuarioRepository.save(usuario);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServiceException("Error al registrar usuario", e);
         }
-        if (usuarioRepository.existsByCorreo(usuario.getCorreo())) {
-            throw new IllegalArgumentException("Ya existe un usuario con el correo: " + usuario.getCorreo());
-        }
-        return usuarioRepository.save(usuario);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<Usuario> buscarPorCorreo(String correo) {
-        return usuarioRepository.findByCorreo(correo);
+        try {
+            return usuarioRepository.findByCorreo(correo);
+        } catch (Exception e) {
+            throw new ServiceException("Error al buscar usuario por correo: " + correo, e);
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean existeCorreo(String correo) {
-        return usuarioRepository.existsByCorreo(correo);
+        try {
+            return usuarioRepository.existsByCorreo(correo);
+        } catch (Exception e) {
+            throw new ServiceException("Error al comprobar existencia de correo: " + correo, e);
+        }
     }
 
     @Override
     public Usuario agregarDireccion(Long usuarioId, Direccion direccion) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con id: " + usuarioId));
+        try {
+            Usuario usuario = usuarioRepository.findById(usuarioId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + usuarioId));
 
-        usuario.agregarDireccion(direccion); // helper de la entidad Usuario
-        return usuarioRepository.save(usuario);
+            usuario.agregarDireccion(direccion); // helper de la entidad Usuario
+            return usuarioRepository.save(usuario);
+        } catch (ResourceNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServiceException("Error al agregar dirección al usuario id: " + usuarioId, e);
+        }
     }
 
     @Override
     public Usuario quitarDireccion(Long usuarioId, Long direccionId) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con id: " + usuarioId));
+        try {
+            Usuario usuario = usuarioRepository.findById(usuarioId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + usuarioId));
 
-        Iterator<Direccion> it = usuario.getDirecciones().iterator();
-        while (it.hasNext()) {
-            Direccion d = it.next();
-            if (d.getId() != null && d.getId().equals(direccionId)) {
-                it.remove();
-                d.setUsuario(null);
-                break;
+            Iterator<Direccion> it = usuario.getDirecciones().iterator();
+            boolean removed = false;
+            while (it.hasNext()) {
+                Direccion d = it.next();
+                if (d.getId() != null && d.getId().equals(direccionId)) {
+                    it.remove();
+                    d.setUsuario(null);
+                    removed = true;
+                    break;
+                }
             }
-        }
 
-        return usuarioRepository.save(usuario);
+            if (!removed) {
+                throw new ResourceNotFoundException("Dirección no encontrada con id: " + direccionId);
+            }
+
+            return usuarioRepository.save(usuario);
+        } catch (ResourceNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServiceException("Error al quitar dirección id: " + direccionId + " del usuario id: " + usuarioId, e);
+        }
     }
 }

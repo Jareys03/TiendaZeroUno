@@ -1,5 +1,7 @@
 package com.example.mdai.services;
 
+import com.example.mdai.exception.ResourceNotFoundException;
+import com.example.mdai.exception.ServiceException;
 import com.example.mdai.model.Producto;
 import com.example.mdai.repository.ProductoRepository;
 import org.springframework.stereotype.Service;
@@ -26,34 +28,57 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     @Transactional(readOnly = true)
     public List<Producto> findAll() {
-        return productoRepository.findAll();
+        try {
+            return productoRepository.findAll();
+        } catch (Exception e) {
+            throw new ServiceException("Error al listar productos", e);
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<Producto> findById(Long id) {
-        return productoRepository.findById(id);
+        try {
+            return productoRepository.findById(id);
+        } catch (Exception e) {
+            throw new ServiceException("Error al buscar producto por id: " + id, e);
+        }
     }
 
     @Override
     public Producto save(Producto producto) {
-        return productoRepository.save(producto);
+        try {
+            return productoRepository.save(producto);
+        } catch (Exception e) {
+            throw new ServiceException("Error al guardar producto", e);
+        }
     }
 
     @Override
     public Producto update(Long id, Producto producto) {
-        return productoRepository.findById(id)
-                .map(existing -> {
-                    existing.setNombre(producto.getNombre());
-                    existing.setPrecio(producto.getPrecio());
-                    return productoRepository.save(existing);
-                })
-                .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado con id: " + id));
+        try {
+            return productoRepository.findById(id)
+                    .map(existing -> {
+                        existing.setNombre(producto.getNombre());
+                        existing.setPrecio(producto.getPrecio());
+                        existing.setCategoria(producto.getCategoria());
+                        return productoRepository.save(existing);
+                    })
+                    .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + id));
+        } catch (ResourceNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServiceException("Error al actualizar producto id: " + id, e);
+        }
     }
 
     @Override
     public void deleteById(Long id) {
-        productoRepository.deleteById(id);
+        try {
+            productoRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new ServiceException("Error al eliminar producto id: " + id, e);
+        }
     }
 
     // =======================
@@ -63,33 +88,49 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     @Transactional(readOnly = true)
     public List<Producto> buscarPorTexto(String texto) {
-        if (texto == null || texto.isBlank()) {
-            return findAll();
+        try {
+            if (texto == null || texto.isBlank()) {
+                return findAll();
+            }
+            return productoRepository.findByNombreContainingIgnoreCase(texto);
+        } catch (Exception e) {
+            throw new ServiceException("Error al buscar productos por texto", e);
         }
-        return productoRepository.findByNombreContainingIgnoreCase(texto);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Producto> filtrarPorPrecio(Double min, Double max) {
-        if (min == null && max == null) {
-            return findAll();
+        try {
+            if (min == null && max == null) {
+                return findAll();
+            }
+            if (min == null) min = 0.0;
+            if (max == null) max = Double.MAX_VALUE;
+            return productoRepository.findByPrecioBetween(min, max);
+        } catch (Exception e) {
+            throw new ServiceException("Error al filtrar productos por precio", e);
         }
-        if (min == null) min = 0.0;
-        if (max == null) max = Double.MAX_VALUE;
-        return productoRepository.findByPrecioBetween(min, max);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Producto> ordenarPorPrecioAsc() {
-        return productoRepository.findAllByOrderByPrecioAsc();
+        try {
+            return productoRepository.findAllByOrderByPrecioAsc();
+        } catch (Exception e) {
+            throw new ServiceException("Error al ordenar productos asc", e);
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Producto> ordenarPorPrecioDesc() {
-        return productoRepository.findAllByOrderByPrecioDesc();
+        try {
+            return productoRepository.findAllByOrderByPrecioDesc();
+        } catch (Exception e) {
+            throw new ServiceException("Error al ordenar productos desc", e);
+        }
     }
 
     @Override
@@ -97,24 +138,25 @@ public class ProductoServiceImpl implements ProductoService {
     public List<Producto> buscarAvanzado(String texto,
                                          Double minPrecio,
                                          Double maxPrecio) {
+        try {
+            List<Producto> productos = productoRepository.findAll();
 
-        // Para simplificar, partimos de todos y filtramos en memoria.
-        List<Producto> productos = productoRepository.findAll();
-
-        return productos.stream()
-                // Filtro por texto (nombre)
-                .filter(p -> {
-                    if (texto == null || texto.isBlank()) return true;
-                    String t = texto.toLowerCase();
-                    return p.getNombre() != null &&
-                            p.getNombre().toLowerCase().contains(t);
-                })
-                // Filtro por precio mínimo
-                .filter(p -> minPrecio == null || p.getPrecio() >= minPrecio)
-                // Filtro por precio máximo
-                .filter(p -> maxPrecio == null || p.getPrecio() <= maxPrecio)
-                .collect(Collectors.toList());
+            return productos.stream()
+                    // Filtro por texto (nombre)
+                    .filter(p -> {
+                        if (texto == null || texto.isBlank()) return true;
+                        String t = texto.toLowerCase();
+                        return p.getNombre() != null &&
+                                p.getNombre().toLowerCase().contains(t);
+                    })
+                    // Filtro por precio mínimo
+                    .filter(p -> minPrecio == null || p.getPrecio() >= minPrecio)
+                    // Filtro por precio máximo
+                    .filter(p -> maxPrecio == null || p.getPrecio() <= maxPrecio)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new ServiceException("Error en búsqueda avanzada de productos", e);
+        }
     }
-
 
 }

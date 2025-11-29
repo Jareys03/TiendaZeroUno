@@ -41,6 +41,7 @@
           <tr>
             <th>ID</th>
             <th>Nombre</th>
+            <th>Categoría</th>
             <th class="text-end">Precio (€)</th>
             <th class="table-actions text-center">Acciones</th>
           </tr>
@@ -49,6 +50,7 @@
           <tr th:each="p : ${productos}">
             <td th:text="${p.id}">1</td>
             <td th:text="${p.nombre}">Ejemplo</td>
+            <td th:text="${p.categoria != null} ? ${p.categoria.nombre} : '-'">-</td>
             <td class="text-end"
                 th:text="${#numbers.formatDecimal(p.precio, 1, 2)}">0.00</td>
             <td class="text-center">
@@ -72,7 +74,7 @@
             </td>
           </tr>
           <tr th:if="${#lists.isEmpty(productos)}">
-            <td colspan="4" class="text-center py-4 text-secondary">
+            <td colspan="5" class="text-center py-4 text-secondary">
               No hay productos registrados.
             </td>
           </tr>

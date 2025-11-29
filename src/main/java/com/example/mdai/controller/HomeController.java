@@ -1,25 +1,36 @@
 package com.example.mdai.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import jakarta.servlet.http.HttpSession;
 
 
 @Controller
 public class HomeController {
 
+    private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
 
     @GetMapping("/")
-    public String inicio(HttpSession session) {
-        // Al volver al inicio quitamos modo admin (si existía)
-        session.setAttribute("modoAdmin", Boolean.FALSE);
-        return "register"; // página pública de inicio con login/registro
+    public String inicio(Model model) {
+        try {
+            return "register"; // página pública de inicio con login/registro
+        } catch (Exception e) {
+            logger.error("Error al cargar la página de inicio", e);
+            model.addAttribute("error", "Ocurrió un error al cargar la página de inicio.");
+            return "register";
+        }
     }
 
     @GetMapping("/admin")
-    public String admin(HttpSession session) {
-        // Establecer modo administrador en la sesión para mostrar botones de admin en las vistas
-        session.setAttribute("modoAdmin", Boolean.TRUE);
-        return "home"; // vista existente de administrador
+    public String admin(Model model) {
+        try {
+            return "home"; // vista existente de administrador
+        } catch (Exception e) {
+            logger.error("Error al cargar la página de administrador", e);
+            model.addAttribute("error", "Ocurrió un error al cargar la página de administrador.");
+            return "home";
+        }
     }
 }

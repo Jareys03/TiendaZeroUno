@@ -20,9 +20,12 @@
       <small class="text-secondary">Define los datos básicos del usuario</small>
     </div>
 
-    <a th:href="@{/usuarios}" class="btn btn-outline-secondary btn-sm">
-      ⬅ Volver al listado
-    </a>
+    <div class="d-flex gap-2">
+        <a th:if="${usuario.id != null}" th:href="@{|/usuarios/${usuario.id}/direcciones|}" class="btn btn-outline-secondary btn-sm">📍 Direcciones</a>
+        <a th:href="@{/usuarios}" class="btn btn-outline-secondary btn-sm">
+          ⬅ Volver al listado
+        </a>
+    </div>
   </div>
 
   <div class="card form-card">

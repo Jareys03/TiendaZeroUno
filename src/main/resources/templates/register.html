@@ -23,12 +23,14 @@
             max-width: 900px;
             margin: 0 auto;
         }
-        .brand-left { display:flex; align-items:center; gap:0.9rem; text-align:left; }
+        /* izquierda (logo + título): ocupar espacio flexible y centrar su contenido */
+        .brand-left { display:flex; align-items:center; gap:0.9rem; text-align:center; flex: 1; justify-content: center; }
         .brand-logo { font-size:2rem; }
         .brand-title { font-size:1.5rem; margin:0; color:#0f172a; font-weight:700; }
         .brand-sub { margin:0; color:#475569; }
 
-        .hero-ctas { display:flex; gap:0.6rem; align-items:center; }
+        /* CTAs: ocupar espacio flexible y alinearse a la derecha */
+        .hero-ctas { display:flex; gap:0.6rem; align-items:center; flex: 1; justify-content: flex-end; }
         .btn-primary-cta {
             background: linear-gradient(90deg,#2563eb,#4f46e5);
             border: none;
@@ -47,16 +49,12 @@
 
         .page-header p { color: #6b7280; margin: 0; }
         .auth-wrapper { max-width: 900px; margin: 1rem auto 4rem; }
-        .admin-back-btn {
-            position: fixed;
-            left: 16px;
-            bottom: 16px;
-            z-index: 9999;
-        }
 
         @media (max-width: 767px) {
             .hero-box { padding: 1rem; }
             .brand-title { font-size: 1.25rem; }
+            /* en móvil: apilar y centrar ambas áreas */
+            .brand-left { justify-content: center; width: 100%; }
             .hero-ctas { margin-top: 0.5rem; width: 100%; justify-content: center; }
         }
     </style>

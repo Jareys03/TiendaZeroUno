@@ -2,7 +2,6 @@ package com.example.mdai.controller;
 
 import com.example.mdai.model.Usuario;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -21,8 +20,7 @@ public class GlobalModelAttributes {
     @ModelAttribute("carritoCount")
     public Integer carritoCount(HttpSession session) {
         Object c = session.getAttribute("carrito");
-        if (c instanceof Map) {
-            Map<?,?> m = (Map<?,?>) c;
+        if (c instanceof Map<?,?> m) {
             int total = 0;
             for (Object v : m.values()) {
                 if (v instanceof Integer) total += (Integer) v;
@@ -31,5 +29,11 @@ public class GlobalModelAttributes {
         }
         return 0;
     }
-}
 
+    @ModelAttribute("modoAdmin")
+    public boolean modoAdmin(HttpSession session) {
+        Object m = session.getAttribute("modoAdmin");
+        if (m instanceof Boolean) return (Boolean) m;
+        return false;
+    }
+}

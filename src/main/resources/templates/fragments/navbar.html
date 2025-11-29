@@ -23,6 +23,10 @@
             <li><a class="dropdown-item" th:href="@{/logout}">Cerrar sesión</a></li>
           </ul>
         </li>
+        <!-- Botón visible de logout a la derecha (rápido) -->
+        <li class="nav-item" th:if="${usuarioLogeado != null}">
+          <a class="nav-link" th:href="@{/logout}">Salir</a>
+        </li>
       </ul>
     </div>
   </div>

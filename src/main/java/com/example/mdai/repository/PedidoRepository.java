@@ -13,7 +13,6 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     Optional<Pedido> findByNumero(String numero);
 
-    // Ejemplos útiles si quieres filtros por los campos que sí tienes
-    // List<Pedido> findByTotalGreaterThanOrderByIdDesc(BigDecimal total);
-    // List<Pedido> findByNumeroStartingWithOrderByIdDesc(String prefijo);
+    // Pedidos de un usuario concreto, ordenados del más nuevo al más viejo
+    List<Pedido> findByUsuario_IdOrderByIdDesc(Long usuarioId);
 }

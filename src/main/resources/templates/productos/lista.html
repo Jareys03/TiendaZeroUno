@@ -50,29 +50,40 @@
           <tr th:each="p : ${productos}">
             <td th:text="${p.id}">1</td>
             <td th:text="${p.nombre}">Ejemplo</td>
-            <td th:text="${p.categoria != null} ? ${p.categoria.nombre} : '-'">-</td>
+
+            <!-- Categoría con ternaria correcta -->
+            <td th:text="${p.categoria != null ? p.categoria.nombre : '-'}">-</td>
+
             <td class="text-end"
                 th:text="${#numbers.formatDecimal(p.precio, 1, 2)}">0.00</td>
+
             <td class="text-center">
-              <div class="btn-group btn-group-sm">
-                <!-- Editar/Eliminar solo para administradores -->
-                <a th:if="${modoAdmin}" th:href="@{|/productos/editar/${p.id}|}" class="btn btn-outline-primary">
+              <!-- 🔹 ADMIN: Editar / Eliminar -->
+              <div class="btn-group btn-group-sm" th:if="${modoAdmin == true}">
+                <a th:href="@{|/productos/editar/${p.id}|}" class="btn btn-outline-primary">
                   ✏ Editar
                 </a>
-                <a th:if="${modoAdmin}" th:href="@{|/productos/eliminar/${p.id}|}"
+                <a th:href="@{|/productos/eliminar/${p.id}|}"
                    class="btn btn-outline-danger"
                    onclick="return confirm('¿Eliminar este producto?');">
                   🗑 Eliminar
                 </a>
-                <!-- Formulario simple para añadir al carrito (usuarios) - siempre visible -->
-                <form th:action="@{/carrito/agregar}" method="post" style="display:inline-block; margin-left:6px;">
+              </div>
+
+              <!-- 🔹 USUARIO: Añadir al carrito -->
+              <div th:if="${modoAdmin != true}">
+                <form th:action="@{/carrito/agregar}" method="post" style="display:inline-block;">
                   <input type="hidden" name="productoId" th:value="${p.id}" />
                   <input type="hidden" name="cantidad" value="1" />
-                  <button class="btn btn-success" type="submit">➕ Añadir</button>
+                  <button class="btn btn-success btn-sm" type="submit">
+                    ➕ Añadir
+                  </button>
                 </form>
               </div>
             </td>
+
           </tr>
+
           <tr th:if="${#lists.isEmpty(productos)}">
             <td colspan="5" class="text-center py-4 text-secondary">
               No hay productos registrados.

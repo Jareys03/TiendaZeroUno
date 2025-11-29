@@ -1,36 +1,68 @@
 <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-light">
   <div class="container">
     <a class="navbar-brand" th:href="@{/}">TiendaZeroUno</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+            aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="mainNav">
+
+      <!-- Navegación izquierda -->
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link" th:href="@{/productos}">Productos</a></li>
-        <li class="nav-item"><a class="nav-link" th:href="@{/pedidos}">Pedidos</a></li>
+
+        <li class="nav-item">
+          <a class="nav-link" th:href="@{/productos}">Productos</a>
+        </li>
+
+        <!-- Pedidos solo si hay usuario logueado -->
+        <li class="nav-item" th:if="${usuarioLogeado != null}">
+          <a class="nav-link" th:href="@{/mis-pedidos}">Pedidos</a>
+        </li>
+
       </ul>
 
+      <!-- Navegación derecha: login / usuario -->
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+
+        <!-- Si NO hay usuario -->
         <li class="nav-item" th:if="${usuarioLogeado == null}">
           <a class="nav-link" th:href="@{/login}">Iniciar sesión</a>
         </li>
+
+        <!-- Si hay usuario -->
         <li class="nav-item dropdown" th:if="${usuarioLogeado != null}">
-          <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false" th:text="${usuarioLogeado.nombre}">Usuario</a>
+          <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button"
+             data-bs-toggle="dropdown" aria-expanded="false"
+             th:text="${usuarioLogeado.nombre}">Usuario</a>
+
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
-            <li><a class="dropdown-item" th:href="@{/carrito}">Mi carrito <span class="badge bg-secondary ms-2" th:text="${carritoCount}">0</span></a></li>
+            <li>
+              <a class="dropdown-item" th:href="@{/carrito}">
+                Mi carrito
+                <span class="badge bg-secondary ms-2" th:text="${carritoCount}">0</span>
+              </a>
+            </li>
+
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" th:href="@{/logout}">Cerrar sesión</a></li>
+
+            <li>
+              <a class="dropdown-item" th:href="@{/logout}">Cerrar sesión</a>
+            </li>
           </ul>
         </li>
-        <!-- Botón visible de logout a la derecha (rápido) -->
+
+        <!-- Botón de salir rápido -->
         <li class="nav-item" th:if="${usuarioLogeado != null}">
           <a class="nav-link" th:href="@{/logout}">Salir</a>
         </li>
+
       </ul>
+
     </div>
   </div>
 </nav>
 
-<!-- Scripts de Bootstrap -->
+<!-- Bootstrap scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

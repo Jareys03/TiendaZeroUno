@@ -1,8 +1,10 @@
 package com.example.mdai.services;
 
 import com.example.mdai.model.Pedido;
+import com.example.mdai.model.Usuario;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface PedidoService {
@@ -17,6 +19,7 @@ public interface PedidoService {
     // Extras útiles
     List<Pedido> findAllOrderByIdDesc();
     Optional<Pedido> findByNumero(String numero);
+    List<Pedido> findByUsuario(Usuario usuario);
 
     /**
      * CU-06 — Procesar compra:
@@ -27,4 +30,7 @@ public interface PedidoService {
      * - Vacía el carrito (deja de tener productos).
      */
     Pedido crearDesdeCarrito(Long carritoId);
+    Pedido crearDesdeCarritoSesion(Map<Long, Integer> carrito, Usuario usuario);
+    Pedido actualizarPedidoDesdeCarritoSesion(Long pedidoId, Map<Long, Integer> carrito);
+
 }

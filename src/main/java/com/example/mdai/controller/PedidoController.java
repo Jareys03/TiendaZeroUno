@@ -65,6 +65,26 @@ public class PedidoController {
         }
     }
 
+    @GetMapping("/{id}")
+    public String ver(@PathVariable Long id, Model model) {
+        try {
+            Optional<Pedido> pedidoOpt = pedidoService.findById(id);
+            if (pedidoOpt.isEmpty()) {
+                // Si no existe, volvemos a la lista con un mensaje
+                model.addAttribute("error", "El pedido con id " + id + " no existe.");
+                return "redirect:/pedidos";
+            }
+
+            model.addAttribute("pedido", pedidoOpt.get());
+            return "pedidos/detalle"; // nueva plantilla
+        } catch (Exception e) {
+            logger.error("Error al mostrar detalles del pedido id=" + id, e);
+            model.addAttribute("error", "No se pudieron cargar los detalles del pedido.");
+            return "redirect:/pedidos";
+        }
+    }
+
+
     // EDITAR
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {

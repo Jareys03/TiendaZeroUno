@@ -7,6 +7,7 @@ import com.example.mdai.model.Usuario;
 import com.example.mdai.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.Iterator;
 import java.util.List;
@@ -89,15 +90,33 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     public Usuario registrarUsuario(Usuario usuario) {
         try {
-            if (usuario.getCorreo() == null || usuario.getCorreo().isBlank()) {
+            // Validaciones mínimas: correo obligatorio y con formato básico
+            String correo = usuario.getCorreo();
+            if (correo == null || correo.isBlank()) {
                 throw new IllegalArgumentException("El correo es obligatorio para registrar un usuario");
+            }
+            String correoLower = correo.toLowerCase();
+            if (!correoLower.contains("@") || !correoLower.contains(".com")) {
+                throw new IllegalArgumentException("El correo debe contener '@' y '.com' y tener formato válido.");
             }
             if (usuarioRepository.existsByCorreo(usuario.getCorreo())) {
                 throw new IllegalArgumentException("Ya existe un usuario con el correo: " + usuario.getCorreo());
             }
+
+            // Si nombre viene vacío, autocompletar con la parte local del correo
+            if (usuario.getNombre() == null || usuario.getNombre().isBlank()) {
+                int at = correo.indexOf('@');
+                String fallback = at > 0 ? correo.substring(0, at) : correo;
+                usuario.setNombre(fallback);
+            }
+
             return usuarioRepository.save(usuario);
         } catch (IllegalArgumentException e) {
             throw e;
+        } catch (DataIntegrityViolationException e) {
+            // Convertir violaciones de integridad en un IllegalArgumentException para mostrar en UI
+            String detalle = e.getMostSpecificCause() != null ? e.getMostSpecificCause().getMessage() : e.getMessage();
+            throw new IllegalArgumentException("Error de datos: " + detalle, e);
         } catch (Exception e) {
             throw new ServiceException("Error al registrar usuario", e);
         }

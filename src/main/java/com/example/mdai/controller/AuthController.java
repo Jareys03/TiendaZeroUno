@@ -10,7 +10,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.HashMap;
 import java.util.Optional;
 
 @Controller
@@ -23,24 +25,32 @@ public class AuthController {
         this.usuarioService = usuarioService;
     }
 
+    // -------- LOGIN --------
+
     @GetMapping("/login")
     public String mostrarLogin(Model model) {
         try {
-            // Reutilizamos register.html que tiene login+registro
+            if (!model.containsAttribute("usuario")) {
+                model.addAttribute("usuario", new Usuario());
+            }
             return "register";
         } catch (Exception e) {
             logger.error("Error al mostrar login", e);
             model.addAttribute("error", "Ocurrió un error al cargar el formulario de login.");
+            if (!model.containsAttribute("usuario")) {
+                model.addAttribute("usuario", new Usuario());
+            }
             return "register";
         }
     }
+
 
     @PostMapping("/login")
     public String login(@RequestParam String correo,
                         @RequestParam String password,
                         Model model,
                         HttpSession session,
-                        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttrs) {
+                        RedirectAttributes redirectAttrs) {
         try {
             Optional<Usuario> opt = usuarioService.buscarPorCorreo(correo);
             if (opt.isEmpty()) {
@@ -60,12 +70,11 @@ public class AuthController {
             // Login correcto: guardar en sesión
             session.setAttribute("usuarioLogeado", u);
 
-            // Asegurar que la sesión contiene un carrito (mapa productoId -> cantidad)
+            // Asegurar carrito en sesión
             if (session.getAttribute("carrito") == null) {
-                session.setAttribute("carrito", new java.util.HashMap<Long, Integer>());
+                session.setAttribute("carrito", new HashMap<Long, Integer>());
             }
 
-            // Mensaje flash de bienvenida
             redirectAttrs.addFlashAttribute("mensaje", "Bienvenido, " + u.getNombre() + "!");
             return "redirect:/productos";
         } catch (Exception e) {
@@ -76,6 +85,46 @@ public class AuthController {
         }
     }
 
+    // -------- REGISTRO --------
+
+    @PostMapping("/registro")
+    public String registrar(@org.springframework.web.bind.annotation.ModelAttribute("usuario") Usuario usuario,
+                            HttpSession session,
+                            RedirectAttributes redirectAttrs,
+                            Model model) {
+        try {
+            // Aquí usa el método que ya tengas para guardar el usuario
+            // Si en tu UsuarioService se llama 'save', 'crearConDireccion', etc., cámbialo.
+            Usuario creado = usuarioService.save(usuario);
+
+            // Autologin
+            session.setAttribute("usuarioLogeado", creado);
+
+            // Asegurar carrito
+            if (session.getAttribute("carrito") == null) {
+                session.setAttribute("carrito", new java.util.HashMap<Long, Integer>());
+            }
+
+            redirectAttrs.addFlashAttribute(
+                    "mensaje",
+                    "Cuenta creada correctamente. ¡Bienvenido, " + creado.getNombre() + "!"
+            );
+
+            // 🔁 Ahora sí: a la lista de productos
+            return "redirect:/productos";
+
+        } catch (Exception e) {
+            logger.error("Error al registrar nuevo usuario correo=" + usuario.getCorreo(), e);
+            model.addAttribute("error", "Ocurrió un error al crear la cuenta.");
+            // Devolvemos el formulario con los datos ya introducidos
+            model.addAttribute("usuario", usuario);
+            return "register";
+        }
+    }
+
+
+    // -------- LOGOUT --------
+
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         try {
@@ -83,7 +132,6 @@ public class AuthController {
             return "redirect:/";
         } catch (Exception e) {
             logger.error("Error al hacer logout", e);
-            // Aunque falle, invalidamos lo posible y redirigimos
             try {
                 session.removeAttribute("usuarioLogeado");
             } catch (Exception ignored) {}

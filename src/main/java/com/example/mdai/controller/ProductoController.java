@@ -1,131 +1,112 @@
 package com.example.mdai.controller;
 
+import com.example.mdai.exception.ResourceNotFoundException;
 import com.example.mdai.model.Producto;
-import com.example.mdai.model.Categoria;
 import com.example.mdai.services.ProductoService;
-import com.example.mdai.services.CategoriaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Optional;
-import java.util.Collections;
-
 
 @Controller
 @RequestMapping("/productos")
 public class ProductoController {
 
-
     private final ProductoService productoService;
-    private final CategoriaService categoriaService;
     private static final Logger logger = LoggerFactory.getLogger(ProductoController.class);
 
-
-    public ProductoController(ProductoService productoService, CategoriaService categoriaService) {
+    public ProductoController(ProductoService productoService) {
         this.productoService = productoService;
-        this.categoriaService = categoriaService;
     }
 
-
+    /**
+     * LISTA PARA USUARIO NORMAL
+     * URL: GET /productos
+     * -> muestra lista con botón "Añadir" (modoAdmin = false)
+     */
     @GetMapping
-    public String listar(Model model) {
-        try {
-            model.addAttribute("productos", productoService.findAll());
-            return "productos/lista"; // templates/productos/lista.html
-        } catch (Exception e) {
-            logger.error("Error al listar productos", e);
-            model.addAttribute("productos", Collections.emptyList());
-            model.addAttribute("error", "Ocurrió un error al listar los productos.");
-            return "productos/lista";
-        }
+    public String listarUsuario(Model model) {
+        model.addAttribute("productos", productoService.findAll());
+        // vista de usuario
+        model.addAttribute("modoAdmin", false);
+        return "productos/lista";
     }
 
-
-    @GetMapping("/nuevo")
-    public String nuevo(Model model) {
-        try {
-            model.addAttribute("producto", new Producto());
-            model.addAttribute("categorias", categoriaService.findAll());
-            return "productos/form"; // templates/productos/form.html
-        } catch (Exception e) {
-            logger.error("Error al preparar formulario nuevo producto", e);
-            model.addAttribute("error", "Ocurrió un error al preparar el formulario.");
-            model.addAttribute("producto", new Producto());
-            return "productos/form";
-        }
+    /**
+     * LISTA PARA ADMIN
+     * URL: GET /productos/admin
+     * -> muestra lista con botones Editar / Eliminar (modoAdmin = true)
+     */
+    @GetMapping("/admin")
+    public String listarAdmin(Model model) {
+        model.addAttribute("productos", productoService.findAll());
+        // vista de administración
+        model.addAttribute("modoAdmin", true);
+        return "productos/lista";
     }
 
-
-    @PostMapping
-    public String crear(@ModelAttribute("producto") Producto producto, BindingResult br, Model model,
-                        @RequestParam(value = "categoriaId", required = false) Long categoriaId) {
-        try {
-            if (br.hasErrors()) return "productos/form";
-            if (categoriaId != null) {
-                Categoria c = categoriaService.findById(categoriaId).orElse(null);
-                producto.setCategoria(c);
-            }
-            productoService.save(producto);
-            model.addAttribute("mensaje", "Producto creado");
-            return "redirect:/productos";
-        } catch (Exception e) {
-            logger.error("Error al crear producto", e);
-            model.addAttribute("error", "Ocurrió un error al crear el producto.");
-            return "productos/form";
-        }
-    }
-
-
+    /**
+     * MOSTRAR FORMULARIO DE EDICIÓN (ADMIN)
+     * URL: GET /productos/editar/{id}
+     */
     @GetMapping("/editar/{id}")
-    public String editar(@PathVariable Long id, Model model) {
+    public String mostrarEditar(@PathVariable Long id, Model model, RedirectAttributes redirectAttrs) {
         try {
-            Optional<Producto> p = productoService.findById(id);
-            if (p.isEmpty()) return "redirect:/productos";
-            model.addAttribute("producto", p.get());
-            model.addAttribute("categorias", categoriaService.findAll());
-            return "productos/form";
+            Optional<Producto> opt = productoService.findById(id);
+            if (opt.isEmpty()) {
+                redirectAttrs.addFlashAttribute("error", "Producto no encontrado");
+                return "redirect:/productos/admin";
+            }
+            model.addAttribute("producto", opt.get());
+            return "productos/form";  // formulario donde podrás editar el precio (y lo que quieras)
         } catch (Exception e) {
-            logger.error("Error al editar producto id=" + id, e);
-            model.addAttribute("error", "Ocurrió un error al cargar el producto para edición.");
-            return "redirect:/productos";
+            logger.error("Error al cargar producto para edición id=" + id, e);
+            redirectAttrs.addFlashAttribute("error", "Ocurrió un error al cargar el producto.");
+            return "redirect:/productos/admin";
         }
     }
 
-
-    @PostMapping("/actualizar/{id}")
-    public String actualizar(@PathVariable Long id, @ModelAttribute("producto") Producto producto, BindingResult br, Model model,
-                              @RequestParam(value = "categoriaId", required = false) Long categoriaId) {
+    /**
+     * GUARDAR CAMBIOS (ADMIN)
+     * URL: POST /productos/editar/{id}
+     */
+    @PostMapping("/editar/{id}")
+    public String actualizar(@PathVariable Long id,
+                             @ModelAttribute("producto") Producto productoForm,
+                             RedirectAttributes redirectAttrs) {
         try {
-            if (br.hasErrors()) return "productos/form";
-            if (categoriaId != null) {
-                Categoria c = categoriaService.findById(categoriaId).orElse(null);
-                producto.setCategoria(c);
-            }
-            productoService.update(id, producto);
-            model.addAttribute("mensaje", "Producto actualizado");
-            return "redirect:/productos";
+            productoService.update(id, productoForm);  // aquí se actualizará el precio también
+            redirectAttrs.addFlashAttribute("mensaje", "Producto actualizado correctamente");
+            return "redirect:/productos/admin";
+        } catch (ResourceNotFoundException e) {
+            redirectAttrs.addFlashAttribute("error", "Producto no encontrado");
+            return "redirect:/productos/admin";
         } catch (Exception e) {
             logger.error("Error al actualizar producto id=" + id, e);
-            model.addAttribute("error", "Ocurrió un error al actualizar el producto.");
-            return "productos/form";
+            redirectAttrs.addFlashAttribute("error", "Ocurrió un error al actualizar el producto.");
+            return "redirect:/productos/admin";
         }
     }
 
-
+    /**
+     * ELIMINAR (ADMIN)
+     * URL: GET /productos/eliminar/{id}
+     */
     @GetMapping("/eliminar/{id}")
-    public String eliminar(@PathVariable Long id, Model model) {
+    public String eliminar(@PathVariable Long id, RedirectAttributes redirectAttrs) {
         try {
             productoService.deleteById(id);
-            model.addAttribute("mensaje", "Producto eliminado");
+            redirectAttrs.addFlashAttribute("mensaje", "Producto eliminado correctamente");
+        } catch (ResourceNotFoundException e) {
+            redirectAttrs.addFlashAttribute("error", "Producto no encontrado");
         } catch (Exception e) {
             logger.error("Error al eliminar producto id=" + id, e);
-            model.addAttribute("error", "Ocurrió un error al eliminar el producto.");
+            redirectAttrs.addFlashAttribute("error", "Ocurrió un error al eliminar el producto.");
         }
-        return "redirect:/productos";
+        return "redirect:/productos/admin";
     }
 }

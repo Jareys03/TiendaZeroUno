@@ -50,13 +50,14 @@
         </td>
 
         <td width="150">
-          <form th:action="@{/carrito/actualizar}" method="post" class="d-flex">
+          <form th:action="@{/carrito/actualizar}" method="post"
+                class="d-flex form-actualizar-cantidad">
             <input type="hidden" name="productoId" th:value="${entry.key.id}">
-            <input type="number" min="1" class="form-control me-2"
+            <input type="number" min="1" class="form-control"
                    name="cantidad" th:value="${entry.value}">
-            <button class="btn btn-sm btn-secondary" type="submit">OK</button>
           </form>
         </td>
+
 
         <td>
           <span th:text="${#numbers.formatDecimal(entry.key.precio * entry.value, 1, 2)} + ' €'"></span>
@@ -83,7 +84,15 @@
 
       <div>
         <a href="/carrito/vaciar" class="btn btn-warning me-2">Vaciar carrito</a>
-        <a href="/pedidos/nuevo" class="btn btn-success">Finalizar compra</a>
+
+        <!-- 🔹 ESTE ES EL BOTÓN NUEVO -->
+        <form th:action="@{/carrito/confirmar}" method="post" class="d-inline">
+          <button type="submit" class="btn btn-success">
+            Realizar pedido
+          </button>
+        </form>
+        <!-- 🔹 FIN BOTÓN NUEVO -->
+
       </div>
     </div>
   </div>
@@ -91,4 +100,16 @@
 </div>
 
 </body>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('form.form-actualizar-cantidad input[name="cantidad"]')
+            .forEach(function (input) {
+              input.addEventListener('change', function () {
+                this.form.submit(); // se manda solo al cambiar la cantidad
+              });
+            });
+  });
+</script>
+
 </html>

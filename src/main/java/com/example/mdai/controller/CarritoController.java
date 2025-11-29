@@ -2,12 +2,16 @@ package com.example.mdai.controller;
 
 import com.example.mdai.model.Producto;
 import com.example.mdai.services.ProductoService;
+import com.example.mdai.services.PedidoService;
+import com.example.mdai.model.Usuario;
+import com.example.mdai.model.Pedido;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 
 import jakarta.servlet.http.HttpSession;
 import java.util.HashMap;
@@ -19,10 +23,14 @@ import java.util.Optional;
 public class CarritoController {
 
     private final ProductoService productoService;
+    private final PedidoService pedidoService;
+
     private static final Logger logger = LoggerFactory.getLogger(CarritoController.class);
 
-    public CarritoController(ProductoService productoService) {
+    public CarritoController(ProductoService productoService,
+                             PedidoService pedidoService) {
         this.productoService = productoService;
+        this.pedidoService = pedidoService;
     }
 
     @SuppressWarnings("unchecked")
@@ -77,6 +85,39 @@ public class CarritoController {
         }
     }
 
+    // Cargar el carrito a partir de un pedido existente (para que el admin pueda editarlo)
+    @GetMapping("/desde-pedido/{id}")
+    public String cargarDesdePedido(@PathVariable("id") Long pedidoId,
+                                    HttpSession session,
+                                    RedirectAttributes redirectAttrs) {
+        try {
+            Pedido pedido = pedidoService.findById(pedidoId)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Pedido no encontrado con id " + pedidoId));
+
+            // Vaciar carrito de sesión
+            Map<Long, Integer> carrito = new HashMap<>();
+            // Rellenar con los productos del pedido
+            pedido.getDetalles().forEach(detalle ->
+                    carrito.put(detalle.getProducto().getId(), detalle.getCantidad())
+            );
+
+            session.setAttribute("carrito", carrito);
+            // Marcar que estamos editando este pedido
+            session.setAttribute("pedidoEditandoId", pedidoId);
+
+            redirectAttrs.addFlashAttribute("mensaje",
+                    "Editando productos del pedido " + pedido.getNumero());
+            return "redirect:/carrito";
+        } catch (Exception e) {
+            logger.error("Error al cargar pedido en carrito id=" + pedidoId, e);
+            redirectAttrs.addFlashAttribute("error",
+                    "No se pudo cargar el pedido en el carrito.");
+            return "redirect:/pedidos";
+        }
+    }
+
+
     // AÑADIR AL CARRITO
     @PostMapping("/agregar")
     public String agregarAlCarrito(
@@ -104,6 +145,59 @@ public class CarritoController {
             return "redirect:/productos";
         }
     }
+    @PostMapping("/confirmar")
+    public String confirmarCompra(HttpSession session,
+                                  Model model,
+                                  RedirectAttributes redirectAttrs) {
+        try {
+            // 1) Comprobar que hay usuario logeado
+            Usuario usuario = (Usuario) session.getAttribute("usuarioLogeado");
+            if (usuario == null) {
+                redirectAttrs.addFlashAttribute("loginError",
+                        "Debes iniciar sesión para confirmar la compra");
+                return "redirect:/login";
+            }
+
+            // 2) Obtener carrito de la sesión
+            Map<Long, Integer> carrito = obtenerCarrito(session);
+            if (carrito.isEmpty()) {
+                redirectAttrs.addFlashAttribute("error",
+                        "No puedes confirmar un pedido con el carrito vacío");
+                return "redirect:/carrito";
+            }
+
+            // 3) Ver si estamos editando un pedido existente
+            Long pedidoEditandoId = (Long) session.getAttribute("pedidoEditandoId");
+            Pedido pedido;
+
+            if (pedidoEditandoId != null) {
+                // 🔹 Actualizar pedido existente (caso admin)
+                pedido = pedidoService.actualizarPedidoDesdeCarritoSesion(pedidoEditandoId, carrito);
+                session.removeAttribute("pedidoEditandoId");
+
+                // Vaciar carrito
+                session.setAttribute("carrito", new HashMap<Long, Integer>());
+                redirectAttrs.addFlashAttribute("mensaje", "Pedido actualizado correctamente");
+                return "redirect:/pedidos/" + pedido.getId();
+            } else {
+                // 🔹 Crear pedido nuevo (flujo normal de usuario)
+                pedido = pedidoService.crearDesdeCarritoSesion(carrito, usuario);
+
+                // Vaciar carrito
+                session.setAttribute("carrito", new HashMap<Long, Integer>());
+
+                model.addAttribute("pedido", pedido);
+                return "pedidos/confirmacion";
+            }
+
+        } catch (Exception e) {
+            logger.error("Error al confirmar compra desde carrito", e);
+            redirectAttrs.addFlashAttribute("error",
+                    "Ocurrió un error al confirmar la compra.");
+            return "redirect:/carrito";
+        }
+    }
+
 
     // ACTUALIZAR CANTIDAD
     @PostMapping("/actualizar")

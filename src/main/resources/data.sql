@@ -78,7 +78,7 @@ INSERT INTO USUARIOS (ID, NOMBRE, CORREO, PASSWORD) VALUES
                                               (2, 'Laura', 'laura@example.com', 'pass2'),
                                               (3, 'Carlos', 'carlos@example.com', 'pass3'),
                                               (4, 'Ana', 'ana@example.com', 'pass4'),
-                                              (5, 'María', 'maria@example.com', 'passw5');
+                                              (5, 'María', 'maria@example.com', 'pass5');
 
 -- 4) CARRITOS
 INSERT INTO CARRITO (ID, USUARIO_ID) VALUES

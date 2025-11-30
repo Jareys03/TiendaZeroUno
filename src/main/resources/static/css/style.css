@@ -43,3 +43,83 @@ body {
     color: #111827;
     text-decoration: underline;
 }
+
+/* ==========================
+   Nuevos estilos añadidos
+   ========================== */
+
+:root {
+    --accent: #0ea5a4; /* teal agradable */
+    --accent-dark: #0b8f86;
+    --muted: #6b7280;
+}
+
+/* Reglas para formularios con tarjeta coherente */
+.form-card {
+    border: 0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.form-card .card-body {
+    padding: 1.5rem 1.75rem;
+}
+
+/* Botón principal personalizado (no usar .btn-primary global) */
+.btn-main {
+    background-color: var(--accent);
+    color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.btn-main:hover, .btn-main:focus {
+    background-color: var(--accent-dark);
+    color: #fff;
+}
+
+/* Inputs con acento suave */
+.form-control:focus, .form-select:focus {
+    border-color: rgba(14,165,164,0.6);
+    box-shadow: 0 0 0 0.15rem rgba(14,165,164,0.12);
+}
+
+/* Labels más suaves */
+.form-label {
+    color: #374151;
+    font-weight: 500;
+}
+
+/* Badges con color neutro por defecto; preservamos bg-primary en lugares puntuales */
+.badge {
+    font-weight: 600;
+}
+
+.badge-numero {
+    background-color: #eef2f7;
+    color: #0f1724;
+}
+
+/* Ajustes para el contenedor principal */
+.app-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Pequeña mejora de contraste para el header de la tarjeta */
+.app-main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Responsivo: reducir padding en pantallas pequeñas */
+@media (max-width: 576px) {
+    .app-main-card {
+        padding: 1.25rem 1rem;
+    }
+    .form-card .card-body {
+        padding: 1rem;
+    }
+}

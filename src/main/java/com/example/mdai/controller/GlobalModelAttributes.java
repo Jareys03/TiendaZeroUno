@@ -54,4 +54,15 @@ public class GlobalModelAttributes {
             return 0;
         }
     }
+
+    @ModelAttribute("modoAdmin")
+    public Boolean modoAdmin(HttpSession session) {
+        try {
+            Object m = session.getAttribute("modoAdmin");
+            return m != null && Boolean.TRUE.equals(m);
+        } catch (Exception e) {
+            logger.error("Error al obtener modoAdmin desde la sesión", e);
+            return false;
+        }
+    }
 }

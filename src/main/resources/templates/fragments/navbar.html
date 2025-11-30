@@ -26,6 +26,14 @@
       <!-- Navegación derecha: login / usuario -->
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
 
+        <!-- Link para activar/desactivar modo admin -->
+        <li class="nav-item" th:if="${modoAdmin != true}">
+          <a class="nav-link" th:href="@{/admin}">Panel admin</a>
+        </li>
+        <li class="nav-item" th:if="${modoAdmin == true}">
+          <a class="nav-link text-danger" th:href="@{/admin/salir}">Salir admin</a>
+        </li>
+
         <!-- Si NO hay usuario -->
         <li class="nav-item" th:if="${usuarioLogeado == null}">
           <a class="nav-link" th:href="@{/login}">Iniciar sesión</a>

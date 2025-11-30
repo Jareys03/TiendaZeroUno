@@ -19,4 +19,7 @@ public interface ItemCarritoRepository extends JpaRepository<ItemCarrito, Long> 
 
     // Borrar todos los items del carrito
     long deleteByCarrito_Id(Long carritoId);
+
+    // borrar todos los items que referencian un producto (por product id)
+    long deleteByProducto_Id(Long productoId);
 }

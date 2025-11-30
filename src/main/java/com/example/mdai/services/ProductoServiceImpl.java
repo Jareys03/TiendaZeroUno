@@ -4,6 +4,10 @@ import com.example.mdai.exception.ResourceNotFoundException;
 import com.example.mdai.exception.ServiceException;
 import com.example.mdai.model.Producto;
 import com.example.mdai.repository.ProductoRepository;
+import com.example.mdai.repository.ItemCarritoRepository;
+import com.example.mdai.repository.DetallePedidoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,9 +20,17 @@ import java.util.stream.Collectors;
 public class ProductoServiceImpl implements ProductoService {
 
     private final ProductoRepository productoRepository;
+    private final ItemCarritoRepository itemCarritoRepository;
+    private final DetallePedidoRepository detallePedidoRepository;
 
-    public ProductoServiceImpl(ProductoRepository productoRepository) {
+    private static final Logger logger = LoggerFactory.getLogger(ProductoServiceImpl.class);
+
+    public ProductoServiceImpl(ProductoRepository productoRepository,
+                               ItemCarritoRepository itemCarritoRepository,
+                               DetallePedidoRepository detallePedidoRepository) {
         this.productoRepository = productoRepository;
+        this.itemCarritoRepository = itemCarritoRepository;
+        this.detallePedidoRepository = detallePedidoRepository;
     }
 
     // =======================
@@ -75,6 +87,22 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     public void deleteById(Long id) {
         try {
+            // Limpiar items de carritos que referencian este producto (FK item_carrito.producto_id)
+            try {
+                long removedItems = itemCarritoRepository.deleteByProducto_Id(id);
+                logger.info("Eliminados {} items de carrito que referenciaban producto id={}", removedItems, id);
+            } catch (Exception e) {
+                logger.warn("No se pudieron eliminar items de carrito para producto id={}: {}", id, e.getMessage());
+            }
+
+            // Limpiar detalles de pedido que referencian este producto (FK detalle_pedido.producto_id)
+            try {
+                long removedDetalles = detallePedidoRepository.deleteByProducto_Id(id);
+                logger.info("Eliminados {} detalles de pedido que referenciaban producto id={}", removedDetalles, id);
+            } catch (Exception e) {
+                logger.warn("No se pudieron eliminar detalles de pedido para producto id={}: {}", id, e.getMessage());
+            }
+
             productoRepository.deleteById(id);
         } catch (Exception e) {
             throw new ServiceException("Error al eliminar producto id: " + id, e);

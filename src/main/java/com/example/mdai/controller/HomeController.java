@@ -29,14 +29,5 @@ public class HomeController {
         }
     }
 
-    @GetMapping("/admin")
-    public String admin(Model model) {
-        try {
-            return "home"; // vista existente de administrador
-        } catch (Exception e) {
-            logger.error("Error al cargar la página de administrador", e);
-            model.addAttribute("error", "Ocurrió un error al cargar la página de administrador.");
-            return "home";
-        }
-    }
+    // El método /admin se ha movido a AdminController
 }

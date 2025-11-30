@@ -2,24 +2,20 @@ package com.example.mdai.controller;
 
 import com.example.mdai.exception.ResourceNotFoundException;
 import com.example.mdai.exception.ServiceException;
+import com.example.mdai.model.Direccion;
 import com.example.mdai.model.Usuario;
 import com.example.mdai.services.UsuarioService;
+import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
-import java.util.Collections;
-import com.example.mdai.model.Direccion;
-import org.springframework.dao.DataIntegrityViolationException;
-
-import jakarta.servlet.http.HttpSession;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.HashMap;
+import java.util.*;
 
 @Controller
 @RequestMapping("/usuarios")
@@ -32,6 +28,9 @@ public class UsuarioController {
         this.usuarioService = usuarioService;
     }
 
+    // =========================
+    // LISTAR
+    // =========================
     @GetMapping
     public String listar(Model model) {
         try {
@@ -47,6 +46,9 @@ public class UsuarioController {
         }
     }
 
+    // =========================
+    // NUEVO
+    // =========================
     @GetMapping("/nuevo")
     public String nuevo(Model model) {
         try {
@@ -62,6 +64,9 @@ public class UsuarioController {
         }
     }
 
+    // =========================
+    // CREAR (registro público)
+    // =========================
     @PostMapping
     public String crear(@ModelAttribute("usuario") Usuario usuario,
                         BindingResult br,
@@ -113,13 +118,16 @@ public class UsuarioController {
             // Registrar usuario
             Usuario creado = usuarioService.registrarUsuario(usuario);
 
-            // 🔹 AUTLOGIN SIEMPRE TRAS CREAR
+            // AUTLOGIN SIEMPRE TRAS CREAR
             session.setAttribute("usuarioLogeado", creado);
 
-            // 🔹 Asegurar carrito en sesión
+            // Asegurar carrito en sesión
             if (session.getAttribute("carrito") == null) {
                 session.setAttribute("carrito", new HashMap<Long, Integer>());
             }
+
+            // Asegurar que tras registrarse no quede activo el modo administrador
+            try { session.removeAttribute("modoAdmin"); } catch (Exception ignored) {}
 
             // Mensaje de bienvenida
             redirectAttrs.addFlashAttribute(
@@ -127,7 +135,7 @@ public class UsuarioController {
                     "Cuenta creada correctamente. ¡Bienvenido, " + creado.getNombre() + "!"
             );
 
-            // 🔹 SIEMPRE → lista de productos
+            // Ir a lista de productos
             return "redirect:/productos";
 
         } catch (IllegalArgumentException e) {
@@ -174,49 +182,132 @@ public class UsuarioController {
         }
     }
 
+    // =========================
+    // EDITAR (mostrar formulario)
+    // =========================
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
         try {
             Optional<Usuario> u = usuarioService.findById(id);
             if (u.isEmpty()) return "redirect:/usuarios";
-            model.addAttribute("usuario", u.get());
+
+            Usuario usuario = u.get();
+            if (usuario.getDirecciones() == null) {
+                usuario.setDirecciones(new ArrayList<>());
+            }
+
+            model.addAttribute("usuario", usuario);
             return "usuarios/form";
         } catch (ResourceNotFoundException | ServiceException e) {
             throw e;
         } catch (Exception e) {
             logger.error("Error al editar usuario id=" + id, e);
-            model.addAttribute("error", "Ocurrió un error al cargar el usuario para edición.");
-            return "redirect:/usuarios";
+            model.addAttribute("error", "Ocurrió un error al cargar el usuario para edición: " + e.getMessage());
+            model.addAttribute("usuario", new Usuario());
+            return "usuarios/form";
         }
     }
 
+    // =========================
+    // ACTUALIZAR
+    // =========================
     @PostMapping("/actualizar/{id}")
     public String actualizar(@PathVariable Long id,
                              @ModelAttribute("usuario") Usuario usuario,
                              BindingResult br,
-                             Model model) {
+                             Model model,
+                             RedirectAttributes redirectAttrs) {
         try {
             if (br.hasErrors()) return "usuarios/form";
+
+            // Limpiar direcciones vacías y vincularlas al usuario
+            if (usuario.getDirecciones() != null) {
+                usuario.getDirecciones().removeIf(d ->
+                        d == null ||
+                                ((d.getCalle() == null || d.getCalle().isBlank()) &&
+                                        (d.getCiudad() == null || d.getCiudad().isBlank()))
+                );
+                for (Direccion d : usuario.getDirecciones()) {
+                    d.setUsuario(usuario);
+                }
+            }
+
             usuarioService.update(id, usuario);
+            redirectAttrs.addFlashAttribute("mensaje", "Usuario actualizado correctamente");
+            return "redirect:/usuarios";
+
+        } catch (DataIntegrityViolationException dive) {
+            logger.error("Violación de integridad al actualizar usuario id=" + id, dive);
+            redirectAttrs.addFlashAttribute(
+                    "error",
+                    "No se pudo actualizar el usuario: datos en conflicto (correo duplicado u otra restricción). Detalle: "
+                            + dive.getMostSpecificCause().getMessage()
+            );
             return "redirect:/usuarios";
         } catch (ResourceNotFoundException | ServiceException e) {
             throw e;
         } catch (Exception e) {
             logger.error("Error al actualizar usuario id=" + id, e);
-            model.addAttribute("error", "Ocurrió un error al actualizar el usuario.");
-            return "usuarios/form";
+            redirectAttrs.addFlashAttribute("error", "Ocurrió un error al actualizar el usuario: " + e.getMessage());
+            return "redirect:/usuarios";
         }
     }
 
+    // =========================
+    // ELIMINAR POR GET (enlace de la tabla)
+    // =========================
     @GetMapping("/eliminar/{id}")
-    public String eliminar(@PathVariable Long id) {
+    public String eliminar(@PathVariable Long id, RedirectAttributes redirectAttrs) {
         try {
             usuarioService.deleteById(id);
+            redirectAttrs.addFlashAttribute("mensaje", "Usuario eliminado correctamente");
+        } catch (DataIntegrityViolationException dive) {
+            logger.error("Violación de integridad al eliminar usuario id=" + id, dive);
+            redirectAttrs.addFlashAttribute(
+                    "error",
+                    "No se puede eliminar el usuario porque tiene datos relacionados (pedidos, referencias). Detalle: "
+                            + dive.getMostSpecificCause().getMessage()
+            );
         } catch (ResourceNotFoundException | ServiceException e) {
             throw e;
         } catch (Exception e) {
             logger.error("Error al eliminar usuario id=" + id, e);
+            redirectAttrs.addFlashAttribute("error", "Ocurrió un error al eliminar el usuario: " + e.getMessage());
         }
         return "redirect:/usuarios";
     }
+
+    // =========================
+    // ELIMINAR POR POST (si usas form con CSRF)
+    // =========================
+    @PostMapping("/eliminar/{id}")
+    public String eliminarPost(@PathVariable Long id, RedirectAttributes redirectAttrs) {
+        try {
+            usuarioService.deleteById(id);
+            redirectAttrs.addFlashAttribute("mensaje", "Usuario eliminado correctamente");
+        } catch (DataIntegrityViolationException dive) {
+            logger.error("Violación de integridad al eliminar usuario id=" + id, dive);
+            redirectAttrs.addFlashAttribute(
+                    "error",
+                    "No se puede eliminar el usuario porque tiene datos relacionados (pedidos, referencias). Detalle: "
+                            + dive.getMostSpecificCause().getMessage()
+            );
+        } catch (ResourceNotFoundException | ServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error al eliminar usuario id=" + id, e);
+            redirectAttrs.addFlashAttribute("error", "Ocurrió un error al eliminar el usuario: " + e.getMessage());
+        }
+        return "redirect:/usuarios";
+    }
+
+    // =========================
+    // DEBUG (opcional)
+    // =========================
+    @GetMapping("/debug/list")
+    @ResponseBody
+    public List<Usuario> debugList() {
+        return usuarioService.findAll();
+    }
+
 }

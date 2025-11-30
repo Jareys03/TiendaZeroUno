@@ -11,4 +11,7 @@ public interface DetallePedidoRepository extends JpaRepository<DetallePedido, Lo
 
     // Por si quieres pedir los detalles de un pedido concreto
     List<DetallePedido> findByPedido_Id(Long pedidoId);
+
+    // borrar detalles por producto id (para limpiar antes de eliminar un producto)
+    long deleteByProducto_Id(Long productoId);
 }

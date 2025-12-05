@@ -109,6 +109,11 @@ public class ProductoServiceImpl implements ProductoService {
         }
     }
 
+    public void deleteAll() {
+        productoRepository.deleteAll();
+    }
+
+
     // =======================
     // Casos de uso de catálogo
     // =======================

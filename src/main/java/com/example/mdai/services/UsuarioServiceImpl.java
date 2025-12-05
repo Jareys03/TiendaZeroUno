@@ -161,6 +161,10 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new ServiceException("Error al eliminar usuario id: " + id, e);
         }
     }
+    public void deleteAll() {
+        usuarioRepository.deleteAll();
+    }
+
 
     // =======================
     // Casos de uso

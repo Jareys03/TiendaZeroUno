@@ -7,7 +7,6 @@ import com.example.mdai.repository.UsuarioRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -16,7 +15,6 @@ class RelacionUsuarioDireccionTest {
 
     @Autowired UsuarioRepository usuarioRepo;
     @Autowired DireccionRepository direccionRepo;
-    @Autowired TestEntityManager em;
 
     @Test
     void usuarioConVariasDirecciones() {
@@ -32,12 +30,8 @@ class RelacionUsuarioDireccionTest {
         u.agregarDireccion(d1);
         u.agregarDireccion(d2);
 
-        // Guardar usuario propaga las direcciones por cascade
-        usuarioRepo.save(u);
-
-        // Forzamos INSERTs y dejamos la sesión limpia
-        em.flush();
-        em.clear();
+        // Guardar usuario propaga las direcciones por cascade y forzar flush
+        usuarioRepo.saveAndFlush(u);
 
         // Recargar desde BD para comprobar que la relación es real
         Usuario loaded = usuarioRepo.findById(u.getId()).orElseThrow();
@@ -54,9 +48,7 @@ class RelacionUsuarioDireccionTest {
         Direccion d = new Direccion("C/ Luna 7", "Cáceres");
         u.agregarDireccion(d);
 
-        usuarioRepo.save(u);
-        em.flush();
-        em.clear();
+        usuarioRepo.saveAndFlush(u);
 
         // Recargar para asegurarnos de que la relación existe en BD
         Usuario reloaded = usuarioRepo.findById(u.getId()).orElseThrow();
@@ -67,9 +59,7 @@ class RelacionUsuarioDireccionTest {
         Direccion aEliminar = reloaded.getDirecciones().get(0);
         reloaded.quitarDireccion(aEliminar);
 
-        usuarioRepo.save(reloaded);
-        em.flush();    // JPA borra la dirección huérfana automáticamente
-        em.clear();
+        usuarioRepo.saveAndFlush(reloaded); // JPA borra la dirección huérfana automáticamente
 
         // Comprobar que ya no queda ninguna dirección en BD
         assertThat(direccionRepo.findAll()).isEmpty();

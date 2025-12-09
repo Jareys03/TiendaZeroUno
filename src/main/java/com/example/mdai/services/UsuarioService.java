@@ -42,4 +42,9 @@ public interface UsuarioService {
      * Eliminar una dirección concreta de un usuario.
      */
     Usuario quitarDireccion(Long usuarioId, Long direccionId);
+    /**
+     * Indica si el usuario tiene rol de administrador.
+     * De momento, lo basamos en su correo (admin@zerouno.com).
+     */
+    boolean esAdmin(Usuario usuario);
 }

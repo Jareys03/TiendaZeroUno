@@ -1,5 +1,6 @@
 package com.example.mdai.controller;
 
+import com.example.mdai.model.Direccion;
 import com.example.mdai.model.Usuario;
 import com.example.mdai.services.UsuarioService;
 import jakarta.servlet.http.HttpSession;
@@ -30,20 +31,24 @@ public class AuthController {
     @GetMapping("/login")
     public String mostrarLogin(Model model) {
         try {
+            // IMPORTANTE: que siempre haya un "usuario" para el form de registro/login
             if (!model.containsAttribute("usuario")) {
-                model.addAttribute("usuario", new Usuario());
+                Usuario u = new Usuario();
+                u.getDirecciones().add(new Direccion());
+                model.addAttribute("usuario", u);
             }
             return "register";
         } catch (Exception e) {
             logger.error("Error al mostrar login", e);
             model.addAttribute("error", "Ocurrió un error al cargar el formulario de login.");
             if (!model.containsAttribute("usuario")) {
-                model.addAttribute("usuario", new Usuario());
+                Usuario u = new Usuario();
+                u.getDirecciones().add(new Direccion());
+                model.addAttribute("usuario", u);
             }
             return "register";
         }
     }
-
 
     @PostMapping("/login")
     public String login(@RequestParam String correo,
@@ -54,20 +59,33 @@ public class AuthController {
         try {
             Optional<Usuario> opt = usuarioService.buscarPorCorreo(correo);
             if (opt.isEmpty()) {
+                // ⚠️ ERROR: usuario no existe
                 model.addAttribute("loginError", "Usuario no encontrado");
                 model.addAttribute("loginCorreo", correo);
+
+                // Volvemos a poner "usuario" para que Thymeleaf no casque
+                Usuario uForm = new Usuario();
+                uForm.getDirecciones().add(new Direccion());
+                model.addAttribute("usuario", uForm);
+
                 return "register";
             }
 
             Usuario u = opt.get();
-            // Comprobación simple de contraseña en texto plano
+
+            // Contraseña incorrecta
             if (u.getPassword() == null || !u.getPassword().equals(password)) {
                 model.addAttribute("loginError", "Contraseña incorrecta");
                 model.addAttribute("loginCorreo", correo);
+
+                Usuario uForm = new Usuario();
+                uForm.getDirecciones().add(new Direccion());
+                model.addAttribute("usuario", uForm);
+
                 return "register";
             }
 
-            // Login correcto: guardar en sesión
+            // ✅ Login correcto
             session.setAttribute("usuarioLogeado", u);
 
             // Asegurar carrito en sesión
@@ -76,16 +94,47 @@ public class AuthController {
             }
 
             redirectAttrs.addFlashAttribute("mensaje", "Bienvenido, " + u.getNombre() + "!");
-            return "redirect:/productos";
+
+            // ---- LÓGICA ADMIN / NORMAL ----
+// ADMIN = correo "admin@zerouno.com" y password "admin"
+            boolean esAdmin =
+                    u.getCorreo() != null &&
+                            u.getCorreo().equalsIgnoreCase("admin@zerouno.com") &&
+                            "admin".equals(password);
+
+            if (esAdmin) {
+                session.setAttribute("modoAdmin", true);
+                return "redirect:/admin";      // ADMIN → PANEL ADMIN
+            } else {
+                session.removeAttribute("modoAdmin");
+                return "redirect:/productos";  // USUARIO NORMAL → LISTA PRODUCTOS
+            }
+
+
         } catch (Exception e) {
             logger.error("Error durante el proceso de login para correo=" + correo, e);
             model.addAttribute("loginError", "Ocurrió un error al intentar iniciar sesión.");
             model.addAttribute("loginCorreo", correo);
+
+            Usuario uForm = new Usuario();
+            uForm.getDirecciones().add(new Direccion());
+            model.addAttribute("usuario", uForm);
+
             return "register";
         }
     }
 
     // -------- REGISTRO --------
+
+    @GetMapping("/registro")
+    public String mostrarRegistro(Model model) {
+        if (!model.containsAttribute("usuario")) {
+            Usuario u = new Usuario();
+            u.getDirecciones().add(new Direccion());
+            model.addAttribute("usuario", u);
+        }
+        return "registro";
+    }
 
     @PostMapping("/registro")
     public String registrar(@org.springframework.web.bind.annotation.ModelAttribute("usuario") Usuario usuario,
@@ -93,8 +142,6 @@ public class AuthController {
                             RedirectAttributes redirectAttrs,
                             Model model) {
         try {
-            // Aquí usa el método que ya tengas para guardar el usuario
-            // Si en tu UsuarioService se llama 'save', 'crearConDireccion', etc., cámbialo.
             Usuario creado = usuarioService.save(usuario);
 
             // Autologin
@@ -110,7 +157,7 @@ public class AuthController {
                     "Cuenta creada correctamente. ¡Bienvenido, " + creado.getNombre() + "!"
             );
 
-            // 🔁 Ahora sí: a la lista de productos
+            // a la lista de productos
             return "redirect:/productos";
 
         } catch (Exception e) {
@@ -121,6 +168,7 @@ public class AuthController {
             return "register";
         }
     }
+
 
 
     // -------- LOGOUT --------

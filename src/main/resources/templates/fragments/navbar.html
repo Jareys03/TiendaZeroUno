@@ -1,76 +1,57 @@
-<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-light">
-  <div class="container">
-    <a class="navbar-brand" th:href="@{/}">TiendaZeroUno</a>
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Navbar</title>
+</head>
+<body>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
-            aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+<!-- Fragmento de navbar -->
+<nav th:fragment="navbar"
+     class="navbar navbar-expand-lg navbar-dark bg-dark py-3 shadow-sm">
+
+  <div class="container d-flex justify-content-between align-items-center">
+
+    <!-- LOGO -->
+    <a class="navbar-brand fw-bold fs-3 text-primary" th:href="@{/}">
+      ZeroUno
+    </a>
+
+    <!-- BOTÓN RESPONSIVE -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarNav" aria-controls="navbarNav"
+            aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <div class="collapse navbar-collapse" id="mainNav">
+    <!-- CONTENIDO -->
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto d-flex align-items-center gap-3">
 
-      <!-- Navegación izquierda -->
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-
+        <!-- Productos -->
         <li class="nav-item">
-          <a class="nav-link" th:href="@{/productos}">Productos</a>
+          <a class="btn btn-outline-light px-3" th:href="@{/productos}">Productos</a>
         </li>
 
-        <!-- Pedidos solo si hay usuario logueado -->
-        <li class="nav-item" th:if="${usuarioLogeado != null}">
-          <a class="nav-link" th:href="@{/mis-pedidos}">Pedidos</a>
+        <!-- Panel Admin (solo si modoAdmin está activo) -->
+        <li class="nav-item" th:if="${session.modoAdmin}">
+          <a class="btn btn-warning px-3 fw-bold" th:href="@{/admin}">Panel admin</a>
         </li>
 
-      </ul>
-
-      <!-- Navegación derecha: login / usuario -->
-      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-
-        <!-- Link para activar/desactivar modo admin -->
-        <li class="nav-item" th:if="${modoAdmin != true}">
-          <a class="nav-link" th:href="@{/admin}">Panel admin</a>
-        </li>
-        <li class="nav-item" th:if="${modoAdmin == true}">
-          <a class="nav-link text-danger" th:href="@{/admin/salir}">Salir admin</a>
+        <li class="nav-item" th:if="${session.usuarioLogeado == null}">
+          <a class="btn btn-success px-3" th:href="@{/registro}">Crear cuenta</a>
         </li>
 
-        <!-- Si NO hay usuario -->
-        <li class="nav-item" th:if="${usuarioLogeado == null}">
-          <a class="nav-link" th:href="@{/login}">Iniciar sesión</a>
-        </li>
 
-        <!-- Si hay usuario -->
-        <li class="nav-item dropdown" th:if="${usuarioLogeado != null}">
-          <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button"
-             data-bs-toggle="dropdown" aria-expanded="false"
-             th:text="${usuarioLogeado.nombre}">Usuario</a>
-
-          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
-            <li>
-              <a class="dropdown-item" th:href="@{/carrito}">
-                Mi carrito
-                <span class="badge bg-secondary ms-2" th:text="${carritoCount}">0</span>
-              </a>
-            </li>
-
-            <li><hr class="dropdown-divider"></li>
-
-            <li>
-              <a class="dropdown-item" th:href="@{/logout}">Cerrar sesión</a>
-            </li>
-          </ul>
-        </li>
-
-        <!-- Botón de salir rápido -->
-        <li class="nav-item" th:if="${usuarioLogeado != null}">
-          <a class="nav-link" th:href="@{/logout}">Salir</a>
+        <li class="nav-item" th:if="${session.usuarioLogeado != null}">
+          <a class="btn btn-danger px-3" th:href="@{/logout}">Salir</a>
         </li>
 
       </ul>
-
     </div>
+
   </div>
 </nav>
 
-<!-- Bootstrap scripts -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

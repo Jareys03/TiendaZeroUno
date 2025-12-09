@@ -269,4 +269,12 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new ServiceException("Error al quitar dirección id: " + direccionId + " del usuario id: " + usuarioId, e);
         }
     }
+
+    @Override
+    public boolean esAdmin(Usuario usuario) {
+        if (usuario == null) return false;
+        return "admin@zerouno.com".equalsIgnoreCase(usuario.getCorreo());
+        // o por nombre: return "admin".equalsIgnoreCase(usuario.getNombre());
+    }
+
 }

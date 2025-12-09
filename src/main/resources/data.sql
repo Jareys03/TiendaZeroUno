@@ -97,6 +97,10 @@ INSERT INTO USUARIOS (ID, NOMBRE, CORREO, PASSWORD) VALUES
                                                         (1003, 'Carlos', 'carlos@example.com', 'pass3'),
                                                         (1004, 'Ana', 'ana@example.com', 'pass4'),
                                                         (1005, 'María', 'maria@example.com', 'pass5');
+-- Usuario administrador
+INSERT INTO usuarios (id, nombre, correo, password) VALUES
+                                                        (100, 'admin', 'admin@zerouno.com', 'admin');
+
 
 -- 4) CARRITOS
 INSERT INTO CARRITO (ID, USUARIO_ID) VALUES

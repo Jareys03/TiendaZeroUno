@@ -55,7 +55,6 @@
         @media (max-width: 767px) {
             .hero-box { padding: 1rem; }
             .brand-title { font-size: 1.25rem; }
-            /* en móvil: apilar y centrar ambas áreas */
             .brand-left { justify-content: center; width: 100%; }
             .hero-ctas { margin-top: 0.5rem; width: 100%; justify-content: center; }
         }
@@ -65,27 +64,10 @@
 
 <header th:replace="fragments/navbar :: navbar"></header>
 
-<!-- Encabezado: título y descripción breve (mejorado visualmente) -->
-<div class="container page-header">
-    <div class="hero-box">
-        <div class="brand-left">
-            <div class="brand-logo">🛒</div>
-            <div>
-                <h2 class="brand-title">TiendaZeroUno</h2>
-                <p class="brand-sub">Tu tienda online de ejemplo — productos seleccionados y compra sencilla.</p>
-            </div>
-        </div>
 
-        <div class="hero-ctas">
-            <a href="/productos" class="btn btn-primary-cta">Ver productos</a>
-            <a href="/admin" class="btn btn-outline-cta"> Ir al panel administrador</a>
-        </div>
-    </div>
-    <p style="margin-top:0.8rem;">Productos seleccionados, compras sencillas y un carrito para gestionar tus artículos favoritos.</p>
-</div>
 
 <div class="container auth-wrapper">
-    <div class="row g-4">
+    <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card shadow-sm">
                 <div class="card-body p-4">
@@ -96,11 +78,13 @@
                         <div th:if="${loginError}" class="alert alert-danger" th:text="${loginError}"></div>
                         <div class="mb-3">
                             <label class="form-label" for="login-correo">Correo</label>
-                            <input id="login-correo" type="email" name="correo" th:value="${loginCorreo}" class="form-control" placeholder="tu@correo.com" required>
+                            <input id="login-correo" type="email" name="correo" th:value="${loginCorreo}"
+                                   class="form-control" placeholder="tu@correo.com" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="login-password">Contraseña</label>
-                            <input id="login-password" type="password" name="password" class="form-control" placeholder="••••••" required>
+                            <input id="login-password" type="password" name="password"
+                                   class="form-control" placeholder="••••••" required>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <button class="btn btn-primary">Entrar</button>
@@ -110,53 +94,8 @@
                 </div>
             </div>
         </div>
-
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <h3 class="mb-3">Crear Cuenta</h3>
-
-                    <!-- Formulario de registro: usa los campos esperados por UsuarioController -->
-                    <form method="post" th:action="@{/usuarios}" th:object="${usuario}">
-                        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-                        <div class="mb-3">
-                            <label class="form-label" for="reg-nombre">Nombre</label>
-                            <input id="reg-nombre" type="text" th:field="*{nombre}" class="form-control" placeholder="Tu nombre" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label" for="reg-correo">Correo</label>
-                            <input id="reg-correo" type="email" th:field="*{correo}" class="form-control" placeholder="tu@correo.com" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label" for="reg-password">Contraseña</label>
-                            <input id="reg-password" type="password" th:field="*{password}" class="form-control" placeholder="••••••" required>
-                        </div>
-
-                        <hr>
-
-                        <h5 class="mb-3">Dirección</h5>
-                        <div class="row g-2">
-                            <div class="col-8">
-                                <label class="form-label" for="dir-calle">Calle</label>
-                                <input id="dir-calle" type="text" th:field="*{direcciones[0].calle}" class="form-control" placeholder="Calle ejemplo" required>
-                            </div>
-                            <div class="col-4">
-                                <label class="form-label" for="dir-ciudad">Ciudad</label>
-                                <input id="dir-ciudad" type="text" th:field="*{direcciones[0].ciudad}" class="form-control" placeholder="Madrid" required>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-end mt-3">
-                            <button class="btn btn-success">Crear cuenta</button>
-                        </div>
-                    </form>
-
-                    <hr>
-
-                </div>
-            </div>
-        </div>
     </div>
 </div>
+
 </body>
 </html>

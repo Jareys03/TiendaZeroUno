@@ -1,13 +1,10 @@
 package com.example.mdai.controller;
 
+import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import com.example.mdai.model.Usuario;
-import com.example.mdai.model.Direccion;
-
 
 @Controller
 public class HomeController {
@@ -15,19 +12,19 @@ public class HomeController {
     private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
 
     @GetMapping("/")
-    public String inicio(Model model) {
+    public String inicio(HttpSession session) {
         try {
-            // Crear un Usuario vacío con una Direccion vacía para que Thymeleaf pueda enlazar direcciones[0]
-            Usuario u = new Usuario();
-            u.getDirecciones().add(new Direccion());
-            model.addAttribute("usuario", u);
-            return "register"; // página pública de inicio con login/registro
+            // Si ya está logueado → directo a productos
+            if (session.getAttribute("usuarioLogeado") != null) {
+                return "redirect:/productos";
+            }
+
+            // Si no hay sesión → ir a login
+            return "redirect:/register";
+
         } catch (Exception e) {
             logger.error("Error al cargar la página de inicio", e);
-            model.addAttribute("error", "Ocurrió un error al cargar la página de inicio.");
-            return "register";
+            return "redirect:/register";
         }
     }
-
-    // El método /admin se ha movido a AdminController
 }

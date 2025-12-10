@@ -2,6 +2,7 @@ package com.example.mdai.controller;
 
 import com.example.mdai.exception.ResourceNotFoundException;
 import com.example.mdai.model.Producto;
+import com.example.mdai.services.CategoriaService;
 import com.example.mdai.services.ProductoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.servlet.http.HttpSession;
 import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/productos")
@@ -19,43 +22,76 @@ public class ProductoController {
 
     private final ProductoService productoService;
     private static final Logger logger = LoggerFactory.getLogger(ProductoController.class);
+    private final CategoriaService categoriaService;
 
-    public ProductoController(ProductoService productoService) {
+    public ProductoController(ProductoService productoService,
+                              CategoriaService categoriaService){
         this.productoService = productoService;
+        this.categoriaService = categoriaService;
     }
 
     /**
      * LISTA PARA USUARIO (o admin según sesión o parámetro URL)
      * URL: GET /productos
-     * -> muestra lista de usuario o admin según el flag de sesión 'modoAdmin' o parámetro 'modoAdmin'
      */
     @GetMapping
     public String listarUsuario(Model model,
                                 HttpSession session,
-                                @RequestParam(value = "modoAdmin", required = false) Boolean modoParam) {
-        model.addAttribute("productos", productoService.findAll());
+                                @RequestParam(value = "modoAdmin", required = false) Boolean modoParam,
+                                @RequestParam(value = "texto", required = false) String texto,
+                                @RequestParam(value = "categoriaId", required = false) Long categoriaId,
+                                @RequestParam(value = "precioMin", required = false) Double precioMin,
+                                @RequestParam(value = "precioMax", required = false) Double precioMax) {
 
-        // Si viene el parámetro en la URL, actualizamos la sesión
-        if (modoParam != null) {
-            if (Boolean.TRUE.equals(modoParam)) {
-                session.setAttribute("modoAdmin", true);
-            } else {
-                session.removeAttribute("modoAdmin");
+        try {
+            // Actualizamos modo admin en sesión si viene el parámetro
+            if (modoParam != null) {
+                if (Boolean.TRUE.equals(modoParam)) {
+                    session.setAttribute("modoAdmin", true);
+                } else {
+                    session.removeAttribute("modoAdmin");
+                }
             }
+
+            Object modo = session.getAttribute("modoAdmin");
+            boolean esAdmin = modo != null && Boolean.TRUE.equals(modo);
+
+            // Búsqueda avanzada por texto + rango de precio
+            List<Producto> productos = productoService.buscarAvanzado(texto, precioMin, precioMax);
+
+            // Filtro adicional por categoría
+            if (categoriaId != null) {
+                productos = productos.stream()
+                        .filter(p -> p.getCategoria() != null
+                                && categoriaId.equals(p.getCategoria().getId()))
+                        .collect(Collectors.toList());
+            }
+
+            model.addAttribute("productos", productos);
+            model.addAttribute("categorias", categoriaService.findAll());
+
+            model.addAttribute("modoAdmin", esAdmin);
+
+            // Volcar de nuevo los filtros al modelo para mantenerlos en el formulario
+            model.addAttribute("texto", texto);
+            model.addAttribute("categoriaId", categoriaId);
+            model.addAttribute("precioMin", precioMin);
+            model.addAttribute("precioMax", precioMax);
+
+            // Plantilla según modo
+            if (esAdmin) {
+                return "productos/lista_admin";
+            }
+            return "productos/lista";
+        } catch (Exception e) {
+            logger.error("Error al listar productos", e);
+            model.addAttribute("error", "Ocurrió un error al cargar la lista de productos.");
+            model.addAttribute("productos", List.of());
+            model.addAttribute("categorias", categoriaService.findAll());
+            return "productos/lista";
         }
-
-        Object modo = session.getAttribute("modoAdmin");
-        boolean esAdmin = modo != null && Boolean.TRUE.equals(modo);
-
-        model.addAttribute("modoAdmin", esAdmin);
-
-        if (esAdmin) {
-            // si la sesión está en modo admin, mostrar la plantilla admin
-            return "productos/lista_admin";
-        }
-        // vista normal de usuario
-        return "productos/lista";
     }
+
 
     /**
      * LISTA PARA ADMIN (ruta legacy)
@@ -63,10 +99,40 @@ public class ProductoController {
      * -> mantiene compatibilidad: muestra la vista admin
      */
     @GetMapping("/admin")
-    public String listarAdmin(Model model) {
-        model.addAttribute("productos", productoService.findAll());
-        model.addAttribute("modoAdmin", true);
-        return "productos/lista_admin";
+    public String listarAdmin(Model model,
+                              @RequestParam(value = "texto", required = false) String texto,
+                              @RequestParam(value = "categoriaId", required = false) Long categoriaId,
+                              @RequestParam(value = "precioMin", required = false) Double precioMin,
+                              @RequestParam(value = "precioMax", required = false) Double precioMax) {
+
+        try {
+            List<Producto> productos = productoService.buscarAvanzado(texto, precioMin, precioMax);
+
+            if (categoriaId != null) {
+                productos = productos.stream()
+                        .filter(p -> p.getCategoria() != null
+                                && categoriaId.equals(p.getCategoria().getId()))
+                        .collect(Collectors.toList());
+            }
+
+            model.addAttribute("productos", productos);
+            model.addAttribute("categorias", categoriaService.findAll());
+            model.addAttribute("modoAdmin", true);
+
+            model.addAttribute("texto", texto);
+            model.addAttribute("categoriaId", categoriaId);
+            model.addAttribute("precioMin", precioMin);
+            model.addAttribute("precioMax", precioMax);
+
+            return "productos/lista_admin";
+        } catch (Exception e) {
+            logger.error("Error al listar productos en modo admin", e);
+            model.addAttribute("error", "Ocurrió un error al cargar la lista de productos.");
+            model.addAttribute("productos", List.of());
+            model.addAttribute("categorias", categoriaService.findAll());
+            model.addAttribute("modoAdmin", true);
+            return "productos/lista_admin";
+        }
     }
 
     /**

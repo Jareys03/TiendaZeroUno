@@ -26,26 +26,76 @@
 
     <!-- CONTENIDO -->
     <div class="collapse navbar-collapse" id="navbarNav">
+
       <ul class="navbar-nav ms-auto d-flex align-items-center gap-3">
 
         <!-- Productos -->
-        <li class="nav-item">
+        <li class="nav-item" th:if="${session.usuarioLogeado == null}">
           <a class="btn btn-outline-light px-3" th:href="@{/productos}">Productos</a>
         </li>
 
-        <!-- Panel Admin (solo si modoAdmin está activo) -->
-        <li class="nav-item" th:if="${session.modoAdmin}">
-          <a class="btn btn-warning px-3 fw-bold" th:href="@{/admin}">Panel admin</a>
-        </li>
 
+        <!-- ======== SI NO HAY SESIÓN INICIADA ======== -->
         <li class="nav-item" th:if="${session.usuarioLogeado == null}">
-          <a class="btn btn-success px-3" th:href="@{/registro}">Crear cuenta</a>
+          <a class="btn btn-primary px-3" th:href="@{/login}">Crear cuenta</a>
         </li>
 
+        <!-- ======== USUARIO NORMAL (NO ADMIN) ======== -->
+        <li class="nav-item dropdown"
+            th:if="${session.usuarioLogeado != null and !T(java.lang.Boolean).TRUE.equals(session.modoAdmin)}">
 
-        <li class="nav-item" th:if="${session.usuarioLogeado != null}">
-          <a class="btn btn-danger px-3" th:href="@{/logout}">Salir</a>
+          <a class="btn btn-outline-info dropdown-toggle px-3"
+             href="#" id="perfilDropdownUser" role="button"
+             data-bs-toggle="dropdown" aria-expanded="false">
+            👤 <span th:text="${session.usuarioLogeado.nombre}">Mi cuenta</span>
+          </a>
+
+          <ul class="dropdown-menu dropdown-menu-end"
+              aria-labelledby="perfilDropdownUser">
+
+            <li>
+              <a class="dropdown-item" th:href="@{/mi-perfil}">
+                Mi perfil
+              </a>
+            </li>
+
+            <li>
+              <a class="dropdown-item" th:href="@{/pedidos}">
+                Mis pedidos
+              </a>
+            </li>
+
+            <li><hr class="dropdown-divider"></li>
+
+            <li>
+              <a class="dropdown-item text-danger" th:href="@{/logout}">
+                Cerrar sesión
+              </a>
+            </li>
+          </ul>
         </li>
+
+        <!-- ======== ADMIN (SOLO CERRAR SESIÓN) ======== -->
+        <li class="nav-item dropdown"
+            th:if="${session.usuarioLogeado != null and T(java.lang.Boolean).TRUE.equals(session.modoAdmin)}">
+
+          <a class="btn btn-outline-warning dropdown-toggle px-3"
+             href="#" id="perfilDropdownAdmin" role="button"
+             data-bs-toggle="dropdown" aria-expanded="false">
+            🛠️ <span th:text="${session.usuarioLogeado.nombre}">Admin</span>
+          </a>
+
+          <ul class="dropdown-menu dropdown-menu-end"
+              aria-labelledby="perfilDropdownAdmin">
+
+            <li>
+              <a class="dropdown-item text-danger" th:href="@{/logout}">
+                Cerrar sesión
+              </a>
+            </li>
+          </ul>
+        </li>
+
 
       </ul>
     </div>
